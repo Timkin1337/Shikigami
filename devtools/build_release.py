@@ -112,7 +112,8 @@ def electron(dst):
         if p.name == "resources":
             (dst / "resources").mkdir(exist_ok=True)
             continue                                                  # default_app.asar не нужен: своя app
-        (shutil.copytree if p.is_dir() else shutil.copy2)(p, dst / p.name)
+        name = "LICENSE.electron.txt" if p.name == "LICENSE" else p.name   # не затирать нашу LICENSE (так было в 0.9.0)
+        (shutil.copytree if p.is_dir() else shutil.copy2)(p, dst / name)
     exe = dst / "Shikigami.exe"
     shutil.copy2(dist / "electron.exe", exe)
     ico = ROOT / "shell" / "assets" / "shikigami.ico"
@@ -162,6 +163,8 @@ def readme(dst):
 def scan(dst):
     step("проверка на личное")
     bad = []
+    if (dst / "LICENSE").read_bytes() != (ROOT / "LICENSE").read_bytes():
+        bad.append("LICENSE: не наша лицензия (затёрта чужим файлом)")
     for p in dst.rglob("*"):
         rel = p.relative_to(dst).as_posix()
         if FORBIDDEN.search(rel):
