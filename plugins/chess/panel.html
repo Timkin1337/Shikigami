@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Шахматы с {name}</title>
+<style>
+  :root {
+    --bg: #0e0b09;
+    --glass: rgba(255,240,225,.06);
+    --glass-border: rgba(255,200,150,.14);
+    --text: #f3e9df;
+    --muted: #b3a294;
+    --accent: #f0a03c;
+    --light-square: #f3dcbc;
+    --dark-square: #b9773f;
+    --last-move: rgba(240,160,60,.45);
+    --check-glow: radial-gradient(circle at center, rgba(255,80,80,.6) 0%, transparent 70%);
+    --piece-shadow: 0 0 2px #0003;
+    --font: "Segoe UI Variable","Segoe UI",system-ui;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; height: 100vh; background: var(--bg);
+    color: var(--text); font-family: var(--font);
+    display: flex; flex-direction: column; align-items: center;
+    overflow: hidden;
+  }
+  header {
+    padding: 12px 0; text-align: center; font-size: 1.2rem;
+    background: var(--glass); border-bottom: 1px solid var(--glass-border);
+    width: 100%; max-width: 1000px;
+  }
+  #container {
+    display: flex; gap: 16px; align-items: flex-start;
+    width: 100%; max-width: 1000px; margin: 16px auto; flex-wrap: wrap;
+  }
+  #board {
+    display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr);
+    gap: 0; user-select: none; touch-action: manipulation;
+    width: var(--board-size, 400px); height: var(--board-size, 400px);
+    position: relative;
+  }
+  .square {
+    position: relative; aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.2rem; line-height: 1;
+  }
+  .square.light { background: var(--light-square); }
+  .square.dark { background: var(--dark-square); }
+  .square.last-move::after {
+    content:""; position:absolute; inset:0; background:var(--last-move);
+    pointer-events:none;
+  }
+  .square.check::after {
+    content:""; position:absolute; inset:0; background:var(--check-glow);
+    pointer-events:none;
+  }
+  .square.selected { outline: 3px solid var(--accent); }
+  /* подсказки ходов — на ::before: ::after занят подсветкой последнего хода, шаха и вспышкой (их inset:0
+     смешивался с точкой и сдвигал её в угол клетки). Центр и размер — от клетки, не от потока */
+  .square.legal-dot::before, .square.legal-capture::before {
+    content:""; position:absolute; left:50%; top:50%; transform:translate(-50%, -50%);
+    border-radius:50%; pointer-events:none; z-index:1;
+  }
+  .square.legal-dot::before { width:24%; height:24%; background:var(--accent); opacity:.7; }
+  .square.legal-capture::before { width:86%; height:86%; border:3px solid var(--accent); }
+  .coord {
+    position:absolute; font-size:0.7rem; color:var(--muted);
+    pointer-events:none;
+  }
+  .coord.file { bottom:2px; left:50%; transform:translateX(-50%); }
+  .coord.rank { left:2px; bottom:50%; transform:translateY(50%); }
+  .piece {
+    user-select:none; pointer-events:none;
+    text-shadow: var(--piece-shadow);
+  }
+  .piece.white { color:#fff4e6; text-shadow:0 0 2px #2b1a12,0 0 4px #2b1a12; }
+  .piece.black { color:#2b1a12; text-shadow:0 0 2px #fff4e6,0 0 4px #fff4e6; }
+  #side {
+    flex:1; min-width:260px; max-width:340px;
+    background:var(--glass); border:1px solid var(--glass-border);
+    border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:12px;
+  }
+  #side h2 { margin:0 0 8px; font-size:1.4rem; text-align:center; color:var(--accent); }
+  #status { font-size:1rem; text-align:center; min-height:2.4em; }
+  #comment {
+    flex:1; background:rgba(0,0,0,.2); border-radius:10px; padding:12px;
+    font-style:italic; line-height:1.4; position:relative;
+  }
+  #comment::before { content:""; position:absolute; left:-8px; top:50%; transform:translateY(-50%);
+    width:0; height:0; border-top:8px solid transparent; border-bottom:8px solid transparent;
+    border-right:8px solid rgba(0,0,0,.2); }
+  #controls { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  #controls button, #controls select {
+    background:rgba(255,200,150,.2); border:1px solid var(--glass-border);
+    color:var(--text); border-radius:6px; padding:6px 10px; font:inherit;
+    cursor:pointer; min-width:60px;
+  }
+  #controls button:hover { background:rgba(255,200,150,.3); }
+  #controls select { appearance:none; padding-right:24px; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6' stroke='%23f3e9df' stroke-width='1' fill='none'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 8px center; background-size:10px 6px; }
+  #moves { font-size:0.9rem; text-align:center; color:var(--muted); }
+  /* «думает» — маленькая плашка над доской, а не чёрный слой на весь экран (он мигал на каждом ходу) */
+  #thinking {
+    position:fixed; top:12px; left:50%; transform:translateX(-50%); background:var(--glass); color:var(--text);
+    border:1px solid var(--glass-border); border-radius:999px; padding:6px 16px;
+    display:flex; align-items:center; gap:8px; font-size:.95rem; pointer-events:none; opacity:0; transition:opacity .2s;
+  }
+  #thinking.show { opacity:1; }
+  #thinking.dots::after {
+    content:""; animation:dots 1.8s infinite;
+  }
+  @keyframes dots {
+    0%,20% { content:""; }
+    40% { content:"."; }
+    60% { content:".."; }
+    80%,100% { content:"..."; }
+  }
+  @media (max-width:700px) {
+    #container { flex-direction:column; align-items:stretch; }
+    #side { width:100%; max-width:none; margin-top:16px; }
+    #board { margin:0 auto; }
+  }
+  /* правки: фигуры растут вместе с доской */
+  .square { font-size: min(7.6vh, 6vw) !important; }
+  .piece { font-family: "Segoe UI Symbol", "Segoe UI", sans-serif; }
+  #container { padding: 16px 24px; justify-content: center; box-sizing: border-box; }
+  #comment:empty { display: none; }
+  .piece { transition: transform .28s cubic-bezier(.2,.8,.2,1); will-change: transform; }
+  .piece.lift { transition: none; }
+  .square.flash::after { content:""; position:absolute; inset:0; background:rgba(240,160,60,.25); animation: fadeout .6s forwards; }
+  @keyframes fadeout { to { opacity: 0; } }
+  #controls .danger { border-color: rgba(229,72,77,.6); }
+</style>
+</head>
+<body>
+<header>Шахматы с {name}</header>
+<div id="container">
+  <div id="board"></div>
+  <div id="side">
+    <h2>Шахматы с {name}</h2>
+    <div id="status">Ваш ход</div>
+    <div id="comment"></div>
+    <div id="controls">
+      <label>Уровень:<select id="level"><option value="1">1 Легко</option><option value="2">2 Новичок</option><option value="3">3 Любитель</option><option value="4">4 Сильно</option></select></label>
+      <label>Цвет:<select id="color"><option value="white">Белыми</option><option value="black">Чёрными</option></select></label>
+      <button id="new">Новая партия</button>
+      <button id="undo">Отменить ход</button>
+      <button id="resign" class="danger">Сдаться</button>
+    </div>
+    <div id="moves">Ходов: 0</div>
+  </div>
+</div>
+<div id="thinking"><div>{name} думает</div></div>
+
+<script src="/ui/i18n.js"></script>
+<script>
+// Доска: клетки адресуются как "e4"; ход — клик по своей фигуре, потом по клетке (или перетаскивание).
+const $ = (id) => document.getElementById(id);
+const boardEl = $('board'), statusEl = $('status'), commentEl = $('comment'), thinkingEl = $('thinking');
+const GLYPH = { p: '♟', n: '♞', b: '♝', r: '♜', q: '♛', k: '♚' };
+let state = null, sel = null, busy = false, dragFrom = null;
+
+function sizeBoard() {
+  const size = Math.min(window.innerHeight * 0.78, window.innerWidth * 0.62);
+  boardEl.style.setProperty('--board-size', size + 'px');
+}
+addEventListener('resize', sizeBoard); sizeBoard();
+
+function parseFen(fen) {
+  const map = {};
+  fen.split(' ')[0].split('/').forEach((row, i) => {
+    let f = 0;
+    for (const ch of row) {
+      if (/\d/.test(ch)) { f += +ch; continue; }
+      map['abcdefgh'[f] + (8 - i)] = { t: ch.toLowerCase(), c: ch === ch.toUpperCase() ? 'white' : 'black' };
+      f++;
+    }
+  });
+  return map;
+}
+const targetsFrom = (sq) => state.legal.filter((m) => m.slice(0, 2) === sq).map((m) => m.slice(2, 4));
+
+let built = null, shownLast = null;
+const cell = {};
+function build(flip) {
+  const files = flip ? 'hgfedcba' : 'abcdefgh', ranks = flip ? '12345678' : '87654321';
+  boardEl.innerHTML = '';
+  for (const r of ranks) for (const f of files) {
+    const sq = f + r, d = document.createElement('div');
+    d.className = 'square ' + (('abcdefgh'.indexOf(f) + +r) % 2 ? 'light' : 'dark');
+    d.dataset.sq = sq;
+    if (r === ranks[7]) d.insertAdjacentHTML('beforeend', `<div class="coord file">${f}</div>`);
+    if (f === files[0]) d.insertAdjacentHTML('beforeend', `<div class="coord rank">${r}</div>`);
+    cell[sq] = d;
+    boardEl.appendChild(d);
+  }
+  built = flip;
+}
+function setPiece(sq, p) {
+  const d = cell[sq], old = d.querySelector('.piece'), want = p ? `${p.c}${p.t}` : '';
+  if ((old?.dataset.k || '') === want) return;
+  old?.remove();
+  if (p) d.insertAdjacentHTML('beforeend', `<div class="piece ${p.c}" data-k="${want}">${GLYPH[p.t]}︎</div>`);
+}
+function slide(from, to) {          // фигура «едет» с клетки from на to
+  const piece = cell[to]?.querySelector('.piece');
+  if (!piece || !cell[from]) return;
+  const a = cell[from].getBoundingClientRect(), b = cell[to].getBoundingClientRect();
+  piece.classList.add('lift');
+  piece.style.transform = `translate(${a.left - b.left}px, ${a.top - b.top}px)`;
+  piece.getBoundingClientRect();
+  piece.classList.remove('lift');
+  piece.style.transform = '';
+  cell[to].classList.remove('flash'); void cell[to].offsetWidth; cell[to].classList.add('flash');
+}
+
+function render() {
+  if (!state) return;
+  const pcs = parseFen(state.fen), flip = state.human === 'black';
+  if (built !== flip) build(flip);
+  const targets = sel ? targetsFrom(sel) : [];
+  const kingSq = state.check && Object.keys(pcs).find((k) => pcs[k].t === 'k' && pcs[k].c === state.turn);
+  for (const sq in cell) {
+    const d = cell[sq];
+    d.classList.toggle('last-move', !!state.last && (state.last.slice(0, 2) === sq || state.last.slice(2, 4) === sq));
+    d.classList.toggle('check', sq === kingSq);
+    d.classList.toggle('selected', sq === sel);
+    d.classList.toggle('legal-capture', targets.includes(sq) && !!pcs[sq]);
+    d.classList.toggle('legal-dot', targets.includes(sq) && !pcs[sq]);
+    setPiece(sq, pcs[sq]);
+  }
+  if (state.last && state.last !== shownLast && shownLast !== null) slide(state.last.slice(0, 2), state.last.slice(2, 4));
+  shownLast = state.last || '';
+  const res = { human: 'Вы победили!', her: '{name} победила', draw: 'Ничья' }[state.result];
+  statusEl.textContent = res || (state.turn === state.human ? (state.check ? 'Вам шах! Ваш ход' : 'Ваш ход') : 'Ход {name}');
+  if (state.comment) commentEl.innerHTML = state.comment.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])).replace(/\*(.+?)\*/g, '<i>$1</i>');
+  $('moves').textContent = 'Ходов: ' + state.moves;
+  $('level').value = state.level;
+  $('color').value = state.human;
+  thinkingEl.classList.toggle('show', busy);
+  $('resign').disabled = !!state.result || !state.moves;
+}
+
+async function api(path, body) {
+  const r = await fetch('/api/plugins/chess' + path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || 'ошибка');
+  return data;
+}
+
+function needsPromotion(from, to) {
+  const p = parseFen(state.fen)[from];
+  return p && p.t === 'p' && (to[1] === '8' || to[1] === '1');
+}
+
+async function move(from, to, promo = '') {
+  if (!targetsFrom(from).includes(to)) { sel = null; render(); return; }
+  if (needsPromotion(from, to) && !promo) return pickPromotion(from, to);
+  sel = null; busy = true; render();
+  try { state = await api('/move', { uci: from + to + promo }); }
+  catch (e) { commentEl.textContent = e.message; }
+  busy = false; render();
+}
+
+function pickPromotion(from, to) {
+  const box = document.createElement('div');
+  box.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:6px;padding:8px;background:rgba(14,11,9,.92);border:1px solid var(--accent);border-radius:12px;z-index:5';
+  for (const [t, g] of [['q', '♛'], ['r', '♜'], ['b', '♝'], ['n', '♞']]) {
+    const b = document.createElement('button');
+    b.textContent = g + '︎';
+    b.style.cssText = 'font-size:32px;width:48px;height:48px;border-radius:8px;border:0;background:#f3dcbc;cursor:pointer';
+    b.onclick = (e) => { e.stopPropagation(); box.remove(); move(from, to, t); };
+    box.appendChild(b);
+  }
+  boardEl.appendChild(box);
+}
+
+const sqAt = (e) => document.elementFromPoint(e.clientX, e.clientY)?.closest('.square')?.dataset.sq;
+const mine = (sq) => { const p = parseFen(state.fen)[sq]; return p && p.c === state.human; };
+
+boardEl.addEventListener('pointerdown', (e) => {
+  if (!state || busy || state.result || state.turn !== state.human) return;
+  const sq = sqAt(e);
+  if (!sq) return;
+  if (sel && sel !== sq && targetsFrom(sel).includes(sq)) { move(sel, sq); return; }
+  if (mine(sq)) { sel = sq; dragFrom = sq; render(); } else { sel = null; render(); }
+});
+addEventListener('pointerup', (e) => {
+  if (!dragFrom) return;
+  const to = sqAt(e), from = dragFrom;
+  dragFrom = null;
+  if (to && to !== from) move(from, to);   // перетащили
+});
+
+$('new').onclick = async () => {
+  shownLast = null;
+  busy = true; render();
+  state = await api('/new', { color: $('color').value, level: +$('level').value });
+  busy = false; render();
+};
+$('undo').onclick = async () => { state = await api('/undo', {}); render(); };
+$('resign').onclick = async () => {
+  if (!confirm('Сдаться в этой партии?')) return;
+  state = await api('/resign', {}); render();
+};
+// сложность — прямо по ходу партии; цвет — только с новой партией
+$('level').onchange = async () => { state = await api('/level', { level: +$('level').value }); render(); };
+$('color').onchange = () => {
+  if (state && state.moves && !state.result && !confirm('Сменить цвет — значит начать новую партию. Начать?')) { $('color').value = state.human; return; }
+  $('new').click();
+};
+
+async function poll() {
+  try {
+    const s = await api('/state');
+    if (!busy) { state = s; render(); }
+  } catch {}
+  setTimeout(poll, state && state.turn !== state.human && !state.result ? 1500 : 5000);
+}
+poll();
+</script>
+</body>
+</html>

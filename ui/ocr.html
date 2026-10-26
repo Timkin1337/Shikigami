@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Текст с экрана</title>
+<style>
+  html, body { margin: 0; height: 100%; cursor: crosshair; user-select: none; background: rgba(10, 8, 6, .28); }
+  #r { position: fixed; border: 2px solid #f0a03c; background: rgba(240, 160, 60, .12); display: none; box-shadow: 0 0 0 9999px rgba(10,8,6,.25); }
+  #hint { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); padding: 8px 16px; border-radius: 12px; font: 14px "Segoe UI", sans-serif;
+    color: #f3e9df; background: rgba(23, 17, 13, .9); border: 1px solid rgba(255, 200, 150, .25); }
+</style></head>
+<body><div id="hint">Выделите текст мышью — он окажется в буфере. Esc — отмена</div><div id="r"></div>
+<script>
+const K = window.shikigami, r = document.getElementById("r");
+let s = null;
+addEventListener("keydown", (e) => { if (e.key === "Escape") K.ocrCancel(); });
+addEventListener("mousedown", (e) => { if (e.button !== 0) return K.ocrCancel(); s = { x: e.clientX, y: e.clientY }; r.style.display = "block"; move(e); });
+addEventListener("mousemove", (e) => { if (s) move(e); });
+function move(e) {
+  const x = Math.min(s.x, e.clientX), y = Math.min(s.y, e.clientY), w = Math.abs(e.clientX - s.x), h = Math.abs(e.clientY - s.y);
+  Object.assign(r.style, { left: x + "px", top: y + "px", width: w + "px", height: h + "px" });
+  r.dataset.box = JSON.stringify({ x, y, w, h });
+}
+addEventListener("mouseup", () => {
+  if (!s) return;
+  s = null;
+  const b = JSON.parse(r.dataset.box || "{}");
+  if (b.w < 6 || b.h < 6) return K.ocrCancel();
+  K.ocrDone(b);
+});
+</script></body></html>

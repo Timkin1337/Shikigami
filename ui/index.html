@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shikigami 式神</title>
+<link rel="stylesheet" href="/ui/style.css">
+</head>
+<body>
+<div id="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+
+<header class="topbar">
+  <div class="brand" title="Shikigami (式神) — дух-помощник из японских легенд"><span class="brand-mark">式</span><span class="brand-name">Shikigami</span></div>
+  <nav class="tabs">
+    <button class="tab active" data-page="home">Главная</button>
+    <button class="tab" data-page="chat">Чат</button>
+    <button class="tab" data-page="commands">Команды</button>
+    <button class="tab" data-page="lists">Дела</button>
+    <button class="tab" data-page="wardrobe">Гардероб</button>
+    <button class="tab" data-page="plugins">Плагины</button>
+    <button class="tab" data-page="modules">Модули</button>
+    <button class="tab" data-page="settings">Настройки</button>
+    <button class="tab" data-page="help">Помощь</button>
+  </nav>
+  <div class="status-pill" id="status"><span class="dot"></span><span class="status-text">подключаюсь…</span></div>
+</header>
+
+<main>
+  <!-- Главная -->
+  <section class="page active" id="page-home">
+    <div class="home-grid">
+      <aside class="home-left">
+        <div class="widget glass" id="w-clock"><div class="clock-time">--:--</div><div class="clock-date"></div></div>
+        <div class="widget glass" id="w-weather"><div class="w-icon">☀</div><div><div class="w-big">—</div><div class="w-sub">погода</div></div></div>
+        <div class="widget glass" id="w-currency"><div class="w-icon">¤</div><div class="w-rows"></div></div>
+        <div class="widget glass" id="w-friend" title="Что такое дружба — нажмите"><div class="w-icon">❤</div><div class="f-box"><div class="w-big f-name">—</div>
+          <div class="f-bar"><i></i></div><div class="w-sub f-sub">дружба</div></div></div>
+      </aside>
+      <div class="home-center">
+        <h1 class="hero-name" data-bind="name">{name}</h1>
+        <p class="hero-sub" id="hero-greet">Голосовая помощница на вашем рабочем столе</p>
+        <div class="hero-actions">
+          <button class="btn primary" data-goto="chat">Чат</button>
+          <button class="btn" id="hero-mic">🎙 Говорить</button>
+        </div>
+        <p class="hero-tip" id="hero-tip"></p>
+        <div class="quick-asks" id="quick-asks"></div>
+        <div class="player glass" id="w-player">
+          <div class="player-art">♪</div>
+          <div class="player-info"><div class="player-title">Ничего не играет</div><div class="player-artist"></div></div>
+          <div class="player-bar"><span class="player-pos">0:00</span><div class="bar"><div class="bar-fill"></div></div><span class="player-dur">0:00</span></div>
+          <div class="player-controls">
+            <button class="icon-btn" data-media="prev">⏮</button>
+            <button class="icon-btn big" data-media="play_pause">⏯</button>
+            <button class="icon-btn" data-media="next">⏭</button>
+          </div>
+        </div>
+      </div>
+      <aside class="home-right">
+        <div class="widget glass sysmon" id="w-sys">
+          <div class="meter" data-k="cpu"><span class="m-label">CPU</span><span class="m-val">—</span><div class="bar"><div class="bar-fill"></div></div></div>
+          <div class="meter" data-k="ram"><span class="m-label">RAM</span><span class="m-val">—</span><div class="bar"><div class="bar-fill"></div></div></div>
+          <div class="meter" data-k="gpu"><span class="m-label">GPU</span><span class="m-val">—</span><div class="bar"><div class="bar-fill"></div></div></div>
+          <div class="meter" data-k="vram"><span class="m-label">VRAM</span><span class="m-val">—</span><div class="bar"><div class="bar-fill"></div></div></div>
+        </div>
+        <div class="widget glass upcoming" id="w-upcoming"><div class="w-title">Ближайшее</div><ul class="mini-list"></ul></div>
+      </aside>
+    </div>
+    <div class="quick-dock">
+      <button class="dock-btn" data-goto="lists" data-sub="tasks" title="Задачи">☑<span class="badge" id="badge-tasks"></span></button>
+      <button class="dock-btn" data-goto="lists" data-sub="events" title="Календарь">📅</button>
+      <button class="dock-btn" data-goto="lists" data-sub="reminders" title="Напоминания">🔔<span class="badge" id="badge-rem"></span></button>
+      <button class="dock-btn" data-goto="lists" data-sub="notes" title="Заметки">📝</button>
+      <button class="dock-btn" data-goto="lists" data-sub="clip" title="История буфера обмена">📋</button>
+    </div>
+  </section>
+
+  <!-- Чат -->
+  <section class="page" id="page-chat">
+    <aside class="chat-list glass">
+      <button class="btn primary wide" id="new-chat">+ Новый чат</button>
+      <ul id="chats"></ul>
+    </aside>
+    <div class="chat-main">
+      <div class="messages" id="messages">
+        <div class="empty-hint">Скажите «{name}» или напишите что-нибудь.</div>
+      </div>
+      <div class="attach-row hidden" id="attach-row"></div>
+      <form class="composer glass" id="composer">
+        <button type="button" class="icon-btn" id="mic" title="Удерживайте, чтобы говорить">🎙</button>
+        <label class="icon-btn" id="attach" title="Картинка: выбрать, вставить (Ctrl+V) или перетащить в поле">📎
+          <input type="file" id="attach-file" accept="image/*" multiple hidden></label>
+        <textarea id="input" rows="1" placeholder="Сообщение…"></textarea>
+        <button type="submit" class="btn primary" id="send">➤</button>
+        <button type="button" class="btn danger hidden" id="stop">■</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Команды -->
+  <section class="page" id="page-commands">
+    <aside class="cmd-list glass">
+      <button class="btn primary wide" id="cmd-new">+ Команда</button>
+      <div class="cmd-side-row"><button class="btn" id="cmd-templates">📋 Шаблоны</button><button class="btn" id="cmd-log">🕘 Журнал</button></div>
+      <div class="cmd-modal hidden" id="cmd-modal"><div class="cmd-modal-box glass"><div class="cmd-modal-head"><b id="cmd-modal-title"></b>
+        <button class="icon-btn" id="cmd-modal-close" title="Закрыть (Esc)">✕</button></div><div id="cmd-modal-body"></div></div></div>
+      <div id="cmd-groups"></div>
+    </aside>
+    <div class="cmd-editor">
+      <div class="cmd-toolbar glass">
+        <input id="cmd-name" placeholder="Название команды">
+        <input id="cmd-group" placeholder="Группа">
+        <label class="switch"><input type="checkbox" id="cmd-enabled" checked><span>включена</span></label>
+        <span class="spacer"></span>
+        <button class="btn" id="cmd-layout">Авто-раскладка</button>
+        <button class="btn" id="cmd-run">▶ Запустить</button>
+        <button class="btn primary" id="cmd-save">Сохранить</button>
+        <button class="btn danger" id="cmd-delete">Удалить</button>
+      </div>
+      <div class="cmd-body">
+        <div class="palette glass" id="palette"></div>
+        <div class="canvas" id="canvas"><svg class="edges" id="edges"></svg><div class="nodes" id="nodes"></div></div>
+        <div class="inspector glass" id="inspector"><div class="muted">Выберите узел</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Дела -->
+  <section class="page" id="page-lists">
+    <nav class="subtabs">
+      <button class="subtab active" data-sub="reminders">Напоминания</button>
+      <button class="subtab" data-sub="tasks">Задачи</button>
+      <button class="subtab" data-sub="events">Календарь</button>
+      <button class="subtab" data-sub="notes">Заметки</button>
+      <button class="subtab" data-sub="facts">Память</button>
+      <button class="subtab" data-sub="clip">Буфер</button>
+    </nav>
+    <div class="list-panel glass">
+      <form class="list-add" id="list-add"></form>
+      <ul class="items" id="list-items"></ul>
+    </div>
+  </section>
+
+  <!-- Гардероб: модели и анимации -->
+  <section class="page" id="page-wardrobe">
+    <div class="wardrobe-head">
+      <div>
+        <h2>Гардероб</h2>
+        <p class="muted">Модели .vrm (VRoid Hub, VRoid Studio, BOOTH) и анимации .vrma / Mixamo .fbx.
+          Перетащите файлы в это окно — модель сразу наденется.</p>
+      </div>
+      <label class="btn primary">Добавить файлы<input type="file" id="wardrobe-upload" accept=".vrm,.vrma,.fbx" multiple hidden></label>
+    </div>
+    <div class="model-grid" id="model-grid"></div>
+    <div class="wardrobe-tools">
+      <div class="glass wardrobe-card">
+        <h3>🎨 Перекраска <span class="muted" id="tint-model"></span></h3>
+        <p class="muted">Цвет волос, глаз и одежды у надетой модели. Файл .vrm не меняется — сброс вернёт как было.</p>
+        <div class="tint-row" id="tint-row">
+          <label data-part="hair">Волосы <input type="color" data-tint="hair" value="#c0506e"></label>
+          <label data-part="eyes">Глаза <input type="color" data-tint="eyes" value="#3fa7ff"></label>
+          <label data-part="clothes">Одежда <input type="color" data-tint="clothes" value="#4a3a6a"></label>
+        </div>
+        <p><button class="btn" type="button" id="tint-reset">Сбросить цвета</button> <span class="muted" id="tint-note"></span></p>
+      </div>
+      <div class="glass wardrobe-card">
+        <h3>📸 Фоторежим</h3>
+        <p class="muted">Поза и настроение — снимок PNG ×2 с прозрачным фоном в «Изображения\Shikigami». Для аватарок и стикеров.</p>
+        <p><select id="photo-pose"><option value="">Как стоит</option><option value="wave">Машет</option><option value="bow">Поклон</option>
+          <option value="happy">Радуется</option><option value="shy">Смущается</option><option value="think">Думает</option>
+          <option value="surprised">Удивлена</option><option value="angry">Сердится</option></select>
+          <select id="photo-emo"><option value="">Лицо как есть</option><option value="happy">Улыбка</option><option value="shy">Смущение</option>
+          <option value="angry">Сердитое</option><option value="sad">Грустное</option><option value="surprised">Удивление</option></select>
+          <button class="btn primary" type="button" id="photo-take">Снять</button></p>
+      </div>
+    </div>
+    <h3 class="anim-title">Анимации</h3>
+    <p class="muted">Вид — по началу имени файла: <code>idle</code> — стояние по кругу, <code>greet</code>/<code>wave</code>/<code>bow</code> — приветствие,
+      <code>dance</code> — танец по просьбе, <code>happy</code>/<code>angry</code>/<code>shy</code>/<code>sad</code>/<code>surprised</code> — эмоции, <code>think</code>, <code>stretch</code>, <code>sleep</code>.
+      Например <code>dance_hiphop.fbx</code>.</p>
+    <p><button class="btn primary" type="button" id="anim-demo">▶ Показать все движения на рабочем столе</button></p>
+    <ul class="items glass" id="anim-list"></ul>
+    <div id="room-section" hidden>
+    <h3 class="anim-title">Комната</h3>
+    <p class="muted">{name} живёт в своей комнате на рабочем столе: ПКМ по ней → «Домой». Мебель в комнате таскается мышью.
+      Добавьте вещь — она заметит новинку и пойдёт смотреть. Мебель — Kenney Furniture Kit (CC0).</p>
+    <p><button class="btn primary" type="button" id="room-home">🏠 Домой</button>
+      <button class="btn" type="button" id="room-desk">На рабочий стол</button>
+      <button class="btn" type="button" id="room-reset">Расставить как было</button></p>
+    <div class="room-items" id="room-items"></div>
+    </div>
+    <details class="room-catalog"><summary>Каталог мебели</summary><div class="room-grid" id="room-grid"></div></details>
+    <div class="drop-overlay hidden" id="drop-overlay">Отпустите — добавлю в гардероб</div>
+  </section>
+
+  <!-- Плагины -->
+  <section class="page" id="page-plugins">
+    <div class="plugin-grid" id="plugin-grid"></div>
+    <div class="plugin-frame glass hidden" id="plugin-frame-wrap">
+      <div class="frame-bar"><span id="plugin-frame-title"></span><button class="btn" id="plugin-frame-close" title="Закрыть (Esc)">✕ Закрыть</button></div>
+      <iframe id="plugin-frame"></iframe>
+    </div>
+  </section>
+
+  <!-- МОДУЛИ: человек сам собирает программу под свой ПК -->
+  <section class="page" id="page-modules">
+    <div class="modules-intro">
+      <h2>Модули</h2>
+      <p>Ставьте только то, что нужно и что потянет ваш компьютер. Всё скачивается с сайтов авторов моделей напрямую
+        и остаётся на этом ПК. Удалить можно в любой момент — место освободится.</p>
+    </div>
+    <div id="modules-list"></div>
+  </section>
+
+  <!-- Настройки -->
+  <!-- ПОМОЩЬ: всё, что нужно новому человеку, по шагам -->
+  <section class="page" id="page-help">
+    <div class="help">
+      <h2>Как всё настроить</h2>
+      <p class="muted">Программа работает целиком на вашем ПК. Разработчику не уходит ничего: ни переписка, ни логи, ни статистика.
+        Ключи, бот и модель — ваши собственные.</p>
+
+      <details class="glass" open><summary>🚀 Быстрый старт — 3 шага</summary>
+        <ol>
+          <li><b>Мозг.</b> Получите бесплатный ключ NVIDIA (ниже) или подключите локальную модель — и впишите в «Настройки → Мозг».</li>
+          <li><b>Внешность.</b> Перетащите файл <code>.vrm</code> в окно «Гардероб» (где взять — ниже).</li>
+          <li><b>Голос.</b> «Настройки → Голос»: включите микрофон и скажите «{name}, привет». Или просто пишите во вкладке «Чат».</li>
+        </ol>
+        <p>Имя, характер и обращение к вам — «Настройки → Образ». Свой характер можно описать парой фраз и нажать «✨ Улучшить с помощью ИИ».</p>
+      </details>
+
+      <details class="glass"><summary>🔑 Ключ NVIDIA (бесплатно, 2 минуты)</summary>
+        <ol>
+          <li>Откройте <a href="https://build.nvidia.com" target="_blank">build.nvidia.com</a> и войдите (почта или Google).</li>
+          <li>Значок профиля → <b>API Keys</b> → <b>Generate API Key</b>. Ключ начинается с <code>nvapi-</code>.</li>
+          <li>Вставьте его в «Настройки → Мозг → Ключ NVIDIA» и нажмите «Сохранить». Перезапуск не нужен.</li>
+        </ol>
+        <p class="muted">Бесплатно — около 40 запросов в минуту, этого хватает с запасом. Ключ хранится только у вас, в файле <code>.env</code>
+          рядом с программой. Никому его не показывайте: по нему тратят ваш лимит.</p>
+      </details>
+
+      <details class="glass"><summary>🖥 Локальная модель — без интернета и ключей</summary>
+        <p>Нужна видеокарта от 8 ГБ (на процессоре тоже работает, но медленно). Проще всего через Ollama:</p>
+        <ol>
+          <li>Скачайте и установите <a href="https://ollama.com/download" target="_blank">Ollama</a>.</li>
+          <li>Откройте терминал и выполните: <code>ollama pull qwen2.5:7b</code> (≈5 ГБ).</li>
+          <li>«Настройки → Мозг» → <b>🔍 Найти локальную модель</b> → «Сохранить». Основная модель — «Локальная».</li>
+        </ol>
+        <p>Можно и <a href="https://lmstudio.ai" target="_blank">LM Studio</a>: скачайте модель, вкладка Developer → Start Server, дальше та же кнопка поиска.</p>
+        <p class="muted">Берите модели, которые умеют вызывать инструменты: Qwen 2.5 / Qwen 3, Llama 3.1 и новее.
+          Без этого она будет болтать, но не сможет открыть программу или узнать погоду. Локальная модель слабее облачной
+          в характере и чаще ошибается — это нормально.</p>
+      </details>
+
+      <details class="glass"><summary>🦊 Где взять модель персонажа (.vrm)</summary>
+        <ul>
+          <li><a href="https://hub.vroid.com/en/models" target="_blank">VRoid Hub</a> — тысячи бесплатных моделей. Ищите кнопку «Download»;
+            у каждой модели автор пишет условия — смотрите, разрешено ли использовать её как аватар.</li>
+          <li><a href="https://vroid.com/en/studio" target="_blank">VRoid Studio</a> — бесплатная программа: модель собирается как в редакторе
+            персонажей игр. Готовую — «Экспорт → Экспорт VRM».</li>
+          <li><a href="https://booth.pm/en/search/VRM" target="_blank">BOOTH</a> — магазин моделей, много бесплатных.</li>
+        </ul>
+        <p>Файл перетащите в «Гардероб» — она переоденется с «пуф!». Анимации <code>.vrma</code> кладутся туда же.</p>
+      </details>
+
+      <details class="glass"><summary>✈ Telegram — пульт с телефона</summary>
+        <ol>
+          <li>В Telegram откройте <a href="https://t.me/BotFather" target="_blank">@BotFather</a> → <code>/newbot</code> → придумайте имя → получите токен.</li>
+          <li>«Настройки → Telegram»: включите, вставьте токен, сохраните.</li>
+          <li>Напишите своему боту — он ответит вашим ID. Впишите ID в «Разрешённые ID» и сохраните.</li>
+        </ol>
+        <p class="muted">Бот слушается только тех, чей ID вписан: по сути это удалённый доступ к ПК. Чужим он отвечает только «я вас не знаю».</p>
+      </details>
+
+      <details class="glass"><summary>🎙 Голос и микрофон</summary>
+        <ul>
+          <li>Говорите одной фразой с именем в начале: «{name}, какая погода?». Просто «{name}?» — ответит «Да?» и выслушает.</li>
+          <li>Ctrl+Alt+T — прочитает вслух выделенный текст (статья, письмо, субтитры).</li>
+          <li>Ctrl+Alt+Space — выслушает одну фразу без имени. Можно назначить кнопку мыши: «Настройки → Голос → Кнопка голоса».</li>
+          <li>Плохо слышит — проверьте, какой микрофон выбран основным в Windows: она слушает его.</li>
+          <li>Первый запуск голоса скачивает модели распознавания (≈0,5 ГБ) — один раз.</li>
+          <li>Голос с эмоциями (радуется, грустит, ворчит) — модуль «ESpeech» во вкладке «Модули». Только русский, ~7,5 ГБ,
+            нужна видеокарта NVIDIA (~3 ГБ видеопамяти), фраза за ~2 секунды. Нет видеокарты — оставьте Silero.</li>
+        </ul>
+      </details>
+
+      <details class="glass"><summary>🧩 Модули — собрать программу под свой ПК</summary>
+        <ul>
+          <li>Во вкладке «Модули» видно, что поставлено, сколько весит и что нагружает: распознавание речи (tiny / small /
+            medium), голоса, плагины. Лишнее — удалите или выключите, нужное — скачайте одной кнопкой.</li>
+          <li>Слабый ПК: Whisper small, голос Silero, тени на модели можно выключить в «Настройки → Аватар».</li>
+          <li><b>Игровой режим</b> (включён): пока игра или фильм на весь экран, аватар прячется и не тратит видеокарту.</li>
+        </ul>
+      </details>
+
+      <details class="glass" id="help-friend"><summary>❤ Дружба и 🏷 наклейки</summary>
+        <ul>
+          <li><b>Дружба</b> — сколько вы общаетесь: очки за разговоры, поглаживания по голове и сыгранные игры (за день —
+            с потолком, спамом не накрутить). Уровни: Знакомые → Приятели (30) → Друзья (100) → Близкие друзья (250) →
+            Лучшие друзья (500). Очки никогда не сгорают и не отнимаются.</li>
+          <li>Что даёт: с каждым уровнем она говорит теплее и свободнее (тот же характер, но ближе к вам), на новый уровень —
+            праздник с конфетти. На права и действия не влияет. Выключить — «Настройки → Аватар → Уровень дружбы».</li>
+          <li><b>Наклейки</b> — альбом достижений в плагине «Развлечения» (вкладка «Плагины» → «Развлечения» →
+            «Наклейки» или скажите «покажи наклейки»): первое гадание, победа в «20 вопросах», поймала мячик, нашли её в
+            прятках и т. д. Новая наклейка — уведомлением.</li>
+        </ul>
+      </details>
+
+      <details class="glass"><summary>⚠ Опасные инструменты</summary>
+        <p>PowerShell, выключение ПК, запись, перенос и удаление файлов, завершение программ <b>выключены</b>.
+          Включаются в «Настройки → Опасные инструменты». Даже тогда каждый раз она спросит «Да/Нет» — читайте, что разрешаете:
+          страница в интернете может прятать «просьбу» к ИИ, и подтверждение — ваша защита.</p>
+      </details>
+
+      <details class="glass"><summary>🔒 Приватность — что и куда уходит</summary>
+        <p><b>Разработчику — ничего.</b> Ни телеметрии, ни статистики, ни «отчётов об ошибках», ни проверки обновлений.
+          Программа не знает никаких серверов автора. Всё ниже — только сервисы, которые вы сами включили или о которых попросили.</p>
+        <ul>
+          <li><b>Облачная модель ИИ</b> (NVIDIA по вашему ключу) получает текст разговора, то, что она о вас запомнила,
+            и то, что вы попросили прочитать (файл, буфер, текст с экрана). Не хотите отдавать это в облако — выберите локальную модель.</li>
+          <li><b>Распознавание речи и голос Silero</b> работают прямо на ПК. Модели скачиваются один раз; дальше — без интернета.</li>
+          <li><b>Голос Microsoft</b> — только если выбрали его в «Настройки → Голос»: тогда текст её ответов уходит в Microsoft.</li>
+          <li>Погода — Open-Meteo (уходит только название города), курсы — currency-api (только код валюты),
+            поиск для ИИ — DuckDuckGo, «найди в браузере» и YouTube — ваш браузер и поисковик.</li>
+          <li>Telegram — только ваш бот и только если вы его включили: ваши сообщения ему проходят через серверы Telegram.</li>
+          <li>Логи, история чатов, заметки, буфер обмена и память — только на этом ПК, в папке <code>data</code>.</li>
+        </ul>
+      </details>
+
+      <details class="glass"><summary>🧯 Что-то сломалось</summary>
+        <p>Логи лежат только у вас. Хотите помочь с исправлением — скопируйте отчёт и отправьте сами, куда сочтёте нужным.
+          Перед отправкой его можно прочитать: ключей, токенов и того, что вы говорили и писали, там нет — только технические строки.</p>
+        <div class="detect-row"><button class="btn" type="button" id="help-logs">📂 Открыть папку с логами</button>
+          <button class="btn" type="button" id="help-report">📋 Скопировать отчёт об ошибке</button><span class="muted" id="help-out"></span></div>
+      </details>
+
+      <p class="muted">Это свободная программа (лицензия MIT): меняйте, дорабатывайте, раздавайте. Исходный код — в папке программы.</p>
+    </div>
+  </section>
+
+  <section class="page" id="page-settings">
+    <form class="settings" id="settings">
+      <fieldset class="glass"><legend>Оформление</legend>
+        <div class="theme-pick" id="theme-pick">
+          <button type="button" data-theme="" title="Тёплая, по умолчанию"><i style="--a:#f0a03c;--b:#e4572e;--c:#0e0b09"></i>Тёплый вечер</button>
+          <button type="button" data-theme="night_fox"><i style="--a:#ff8a3d;--b:#7c5cff;--c:#0f1117"></i>Ночной неон</button>
+          <button type="button" data-theme="sakura"><i style="--a:#ff79c6;--b:#bd93f9;--c:#1e1b2e"></i>Сакура в сумерках</button>
+          <button type="button" data-theme="matcha"><i style="--a:#8bd450;--b:#3dd6c4;--c:#0e1512"></i>Цифровая матча</button>
+          <button type="button" data-theme="tea"><i style="--a:#8b5e3c;--b:#6b8e6b;--c:#f4ebdd"></i>Чайная комната</button>
+        </div>
+      </fieldset>
+      <fieldset class="glass"><legend>Образ</legend>
+        <label class="full no-i18n">Язык / Language <select id="lang-select"><option value="auto">Как в Windows / As in Windows</option>
+          <option value="ru">Русский</option><option value="en">English</option></select></label>
+        <label>Имя помощницы <input name="assistant_name"></label>
+        <label>Как зовут вас <input name="user_name"></label>
+        <label>Ваш день рождения <input name="user_birthday" placeholder="ДД.ММ — по желанию, поздравит утром"></label>
+        <label>Обращение <input name="address"></label>
+        <label>Характер
+          <select name="persona"><option value="kitsune">Кицунэ-горничная (цундере)</option><option value="neutral">Нейтральная</option><option value="custom">Свой промпт</option></select></label>
+        <label class="full">Свой характер — работает, если в поле «Характер» выбрано «Свой промпт»
+          <textarea name="persona_custom" rows="5" placeholder="Например: весёлая лиса-хакерша, шутит про код, зовёт меня «шеф», не терпит лень…"></textarea></label>
+        <p class="muted full">Опишите обычными словами, какой должна быть помощница: характер, манера речи, как к вам относится.
+          Можно коротко — кнопка ниже сама развернёт описание. Если хотите, чтобы описание не зависело от имён, вставьте метки:
+          <code>{name}</code> — подставится имя помощницы, <code>{user}</code> — ваше имя, <code>{address}</code> — как она к вам обращается
+          (все три — поля выше). Пример: «Ты — {name}, зовёшь {user} словом „{address}“».</p>
+        <div class="full detect-row"><button class="btn" type="button" id="persona-improve">✨ Улучшить с помощью ИИ</button>
+          <span class="muted" id="persona-improve-out">ИИ перепишет набросок в подробный промпт — проверьте результат и нажмите «Сохранить».</span></div>
+        <p class="muted full">Мгновенные реплики — на тычки, «с возвращением», в играх и облачках — пишутся под характер заранее,
+          сразу после сохранения характера (нужен «мозг»). До этого звучат стандартные.</p>
+        <label>Сколько вариантов каждой реплики <input name="lines.count" type="number" min="5" max="40" step="5"></label>
+        <div class="detect-row"><button class="btn" type="button" id="lines-regen">🔄 Написать реплики под характер</button>
+          <span class="muted" id="lines-out"></span></div>
+        <label>Город для погоды <input name="city" placeholder="например, Киев, Алматы, Минск"></label>
+        <label>Страна <input name="country" placeholder="праздники, цены и новости — для неё"></label>
+        <label>Ваша валюта <input name="currency_base" placeholder="USD" maxlength="3" style="text-transform:uppercase"></label>
+        <label>Поисковик в браузере <select name="search_engine"><option value="google">Google</option><option value="yandex">Яндекс</option>
+          <option value="bing">Bing</option><option value="duckduckgo">DuckDuckGo</option></select></label>
+        <label class="full">Курсы каких валют показывать <input name="currency_codes" placeholder="EUR,GBP,CNY"></label>
+      </fieldset>
+      <fieldset class="glass"><legend>Мозг</legend>
+        <label>Основная модель <select name="llm.primary"><option value="nvidia">NVIDIA (облако)</option><option value="local">Локальная (Ollama, LM Studio, llama.cpp)</option></select></label>
+        <label>Запасная <select name="llm.fallback"><option value="local">Локальная</option><option value="nvidia">NVIDIA</option><option value="">нет</option></select></label>
+        <label>Модель NVIDIA <input name="llm.providers.nvidia.model"></label>
+        <label class="check"><input type="checkbox" name="llm.auto_model"> Подбирать самую быструю модель NVIDIA автоматически</label>
+        <label>Запросов в минуту (NVIDIA) <input name="llm.providers.nvidia.rpm" type="number"></label>
+        <label>Ключ NVIDIA <input name="_secrets.NVIDIA_API_KEY" type="password" placeholder="оставьте пустым, чтобы не менять"></label>
+        <label class="full">Кто пишет ответ в характере (модель NVIDIA) <input name="llm.style_model" placeholder="пусто — та же, что выполняет просьбы"></label>
+        <label>Сколько реплик помнит в разговоре <input name="llm.history_messages" type="number" min="4" max="80"></label>
+        <label>Сколько шагов с инструментами подряд <input name="llm.max_steps" type="number" min="1" max="20"></label>
+        <label>Адрес локальной модели <input name="llm.providers.local.base_url" placeholder="http://127.0.0.1:11434/v1"></label>
+        <label>Имя локальной модели <input name="llm.providers.local.model" placeholder="qwen2.5:7b"></label>
+        <label class="full">Или свой llama-server: файл модели (.gguf) — тогда запущу его сама <input name="llm.providers.local.model_path"></label>
+        <div class="full detect-row"><button class="btn" type="button" id="llm-detect">🔍 Найти локальную модель</button>
+          <span class="muted" id="llm-detect-out">Ищет запущенные Ollama, LM Studio и llama.cpp на этом ПК.</span></div>
+      </fieldset>
+      <fieldset class="glass danger-box"><legend>⚠ Опасные инструменты</legend>
+        <label class="check"><input type="checkbox" name="allow_dangerous"> Разрешить PowerShell, выключение ПК, запись, перенос и удаление файлов, завершение программ</label>
+        <p class="muted full">Выключено по умолчанию. Эти инструменты работают с вашими правами: ошибка модели или подсказка,
+          спрятанная на странице, может испортить файлы или систему. Даже включённые, они каждый раз спрашивают «Да/Нет» —
+          читайте, что именно разрешаете. Если программа запущена от имени администратора — права у этих инструментов такие же.</p>
+      </fieldset>
+      <fieldset class="glass"><legend>Голос</legend>
+        <label class="check"><input type="checkbox" name="voice.enabled"> Слушать микрофон</label>
+        <label>Микрофон <select name="voice.input_device" id="mic-select"><option value="">Как в Windows (основной)</option></select></label>
+        <label>Слово-триггер <input name="voice.wake_word"></label>
+        <label class="check"><input type="checkbox" name="voice.speak_typed"> Озвучивать ответы и в чате</label>
+        <label>Распознавание (Whisper) <select name="voice.stt_model"><option>tiny</option><option>base</option><option>small</option><option>medium</option></select></label>
+        <label>Распознавание на <select name="voice.stt_device"><option value="auto">сама выберет</option><option value="cuda">видеокарте NVIDIA</option><option value="cpu">процессоре</option></select></label>
+        <label>Верить имени, расслышанному наспех, от <input name="voice.wake_min_prob" type="number" step="0.05" min="0" max="1"></label>
+        <label class="full">Свои слова для распознавания <input name="voice.stt_hint" placeholder="ники, игры, моды — через запятую"></label>
+        <div class="ptt-row"><span>Кнопка голоса</span><b id="ptt-key">не задана</b>
+          <button class="btn" type="button" id="ptt-set">Назначить</button><button class="btn" type="button" id="ptt-clear">Убрать</button></div>
+        <label>Как работает кнопка <select name="voice.ptt_mode"><option value="hold">Держу — слушает, отпустил — выполняет</option>
+          <option value="press">Нажал — следующая фраза команда</option></select></label>
+        <p class="muted">Подходят клавиши и кнопки мыши: средняя, боковые «назад» и «вперёд». Работает и в играх, игра нажатие тоже получит. Имя звать не нужно.</p>
+        <label>Движок голоса <select name="voice.tts_engine"><option value="silero">Silero (на этом ПК, без интернета)</option><option value="espeech">С эмоциями (ESpeech, на этом ПК — нужен голосовой пакет)</option><option value="edge">Microsoft (онлайн, живее — текст ответов уходит в Microsoft)</option></select></label>
+        <label class="only-edge">Голос Microsoft <select name="voice.edge_voice"><option value="ru-RU-SvetlanaNeural">Светлана (русский)</option>
+          <option value="en-US-AvaMultilingualNeural">Ава (мягкий, лёгкий акцент)</option><option value="en-US-EmmaMultilingualNeural">Эмма (бодрый)</option>
+          <option value="fr-FR-VivienneMultilingualNeural">Вивьен</option><option value="de-DE-SeraphinaMultilingualNeural">Серафина</option>
+          <option value="pt-BR-ThalitaMultilingualNeural">Талита</option></select></label>
+        <div class="full espeech-panel" id="espeech-panel">
+          <h4>Голос с эмоциями</h4>
+          <div class="es-row">
+            <label>Тембр <select name="voice.espeech_voice" id="es-voice"></select></label>
+            <label>Сила эмоций <select name="voice.espeech_strength"><option value="off">без эмоций — ровный тембр</option>
+              <option value="mild">мягко — эмоции без дрожи</option><option value="full">ярко — сильные эмоции</option></select></label>
+            <label>Качество <select name="voice.espeech_steps"><option value="16">быстрее (16 шагов)</option>
+              <option value="24">обычное (24)</option><option value="32">чище (32)</option><option value="48">лучшее (48, медленнее)</option></select></label>
+          </div>
+          <p class="muted" id="es-desc"></p>
+          <details class="es-design"><summary>✨ Создать тембр по описанию</summary>
+            <p class="muted" id="es-design-note">Опишите голос словами — получится новый тембр со всеми эмоциями (1–3 минуты на видеокарте).</p>
+            <label>Название <input id="es-name" placeholder="например, Сонная"></label>
+            <label class="full">Каким должен быть голос <textarea id="es-text" rows="2" placeholder="Например: низкий спокойный голос молодой девушки, чуть хрипловатый, говорит неторопливо и тепло"></textarea></label>
+            <p><button type="button" class="btn primary" id="es-make">Создать тембр</button> <span class="muted" id="es-progress"></span></p>
+          </details>
+        </div>
+        <label class="only-silero">Голос Silero <select name="voice.tts_speaker"><option>xenia</option><option>kseniya</option><option>baya</option><option>aidar</option><option>eugene</option></select></label>
+        <label class="only-silero">Высота <select name="voice.tts_pitch"><option value="x-low">очень низко</option><option value="low">ниже</option><option value="medium">обычно</option><option value="high">выше</option><option value="x-high">очень высоко</option></select></label>
+        <label>Скорость <select name="voice.tts_rate"><option value="x-slow">очень медленно</option><option value="slow">медленнее</option><option value="medium">обычно</option><option value="fast">быстрее</option><option value="x-fast">очень быстро</option></select></label>
+        <label class="full"><button type="button" class="btn" id="voice-test">▶ Прослушать голос</button></label>
+      </fieldset>
+      <fieldset class="glass"><legend>Аватар</legend>
+        <label class="check"><input type="checkbox" name="avatar.enabled"> Показывать на рабочем столе</label>
+        <label class="check"><input type="checkbox" name="avatar.seasons"> Времена года вокруг неё (листья, снег, сакура, светлячки)</label>
+        <label class="check"><input type="checkbox" name="avatar.wander"> Гуляет по рабочему столу, когда ничем не занята</label>
+        <label class="check"><input type="checkbox" name="avatar.pastimes"> Занятия от скуки: читает, пьёт чай, сидит в телефоне, напевает</label>
+        <label class="check"><input type="checkbox" name="avatar.watch"> Смотрит видео вместе с вами (YouTube, Twitch…), на паузе оборачивается</label>
+        <label class="check"><input type="checkbox" name="fun.hat"> Праздничные шляпы: Хэллоуин, Новый год, день рождения</label>
+        <label class="check"><input type="checkbox" name="avatar.wardrobe"> Одевается по погоде: зонтик в дождь, шарф в мороз, веер в жару (нужен город)</label>
+        <label class="check"><input type="checkbox" name="avatar.shadows"> Тени на модели (объёмнее; на слабой видеокарте можно выключить)</label>
+        <label class="check"><input type="checkbox" name="behavior.game_mode"> Игровой режим: уступать экран, пока игра или фильм на весь экран</label>
+        <label class="check"><input type="checkbox" name="behavior.friendship"> Уровень дружбы: растёт от разговоров, поглаживаний и игр, никогда не падает</label>
+        <label class="check"><input type="checkbox" name="behavior.startle"> Вздрагивает от хлопка или грохота (микрофон, слышит только громкость)</label>
+        <label>Во время игры <select name="behavior.game_style"><option value="auto">Авто: «вебкой» в углу, если экран один</option>
+          <option value="cam">Всегда «вебкой» в углу</option><option value="hide">Прятаться совсем</option></select></label>
+        <label>Угол «вебки» <select name="avatar.cam.corner"><option value="br">Справа снизу</option><option value="bl">Слева снизу</option>
+          <option value="tr">Справа сверху</option><option value="tl">Слева сверху</option></select></label>
+        <label>Размер «вебки», px <input name="avatar.cam.size" type="number" step="20" min="140" max="600"></label>
+        <label>Непрозрачность «вебки» <input name="avatar.cam.opacity" type="number" step="0.05" min="0.3" max="1"></label>
+        <label class="check"><input type="checkbox" name="avatar.cam.frame"> Рамка и тёмный фон у «вебки» (без неё — только фигура)</label>
+        <div class="full" id="screens-box"></div>
+        <label>Размер <input name="avatar.scale" type="number" step="0.1" min="0.3" max="3"></label>
+        <label>Толщина контура (с новой загрузки модели) <input name="avatar.outline" type="number" step="0.5" min="0" max="4"></label>
+        <label class="full"><button type="button" class="btn" data-goto="wardrobe">Модели и анимации — в «Гардеробе»</button></label>
+      </fieldset>
+      <fieldset class="glass"><legend>Сама по себе</legend>
+        <label class="check"><input type="checkbox" name="behavior.enabled"> Заговаривает первой: приветствие с погодой и делами, «с возвращением», ночью гонит спать, напоминает размяться</label>
+        <label class="check"><input type="checkbox" name="behavior.voice"> Говорит это вслух (иначе — только облачком)</label>
+        <label>Сколько говорит сама <select name="behavior.chatty">
+          <option value="silent">Молчит — только облачка</option><option value="minimal">Минимум — до 3 раз в час</option>
+          <option value="normal">Обычно — до 8 раз в час</option><option value="chatty">Болтушка — до 20 раз в час</option></select></label>
+        <p class="muted">На прямое обращение, тычки и поглаживания отвечает всегда. Срочное в игре (крипер, тонете) — в любом режиме, кроме «Молчит». ПКМ по ней → «Помолчи час».</p>
+        <label class="check"><input type="checkbox" name="behavior.respect_dnd"> Молчит вслух, когда в Windows включено «Не беспокоить»</label>
+        <label class="full muted">Не чаще раза в 15 минут и молчит, пока на весь экран открыта игра или фильм.</label>
+      </fieldset>
+      <fieldset class="glass"><legend>Майнкрафт</legend>
+        <label class="check"><input type="checkbox" name="minecraft.companion"> Заходить в мир игроком, когда он открыт для сети</label>
+        <label>Ник {name} в игре <input name="minecraft.bot_name"></label>
+        <label class="check"><input type="checkbox" name="minecraft.react"> Комментировать смерти и достижения</label>
+        <label class="check"><input type="checkbox" name="minecraft.type_replies"> Ответ на вопрос из игрового чата — ещё и текстом в игру (не только голосом)</label>
+        <label class="full">Папка игры (если лаунчер не стандартный) <input name="minecraft.game_dir" placeholder="сама найдёт: официальный, TLauncher, CurseForge, Prism, Modrinth"></label>
+        <label class="full muted">В мир с модами, добавляющими блоки (например, guns++, Macaw’s), игрок без модов не пустят.</label>
+      </fieldset>
+      <fieldset class="glass"><legend>Telegram</legend>
+        <label class="check"><input type="checkbox" name="telegram.enabled"> Управление через своего бота</label>
+        <label>Токен бота <input name="_secrets.TELEGRAM_BOT_TOKEN" type="password" placeholder="от @BotFather"></label>
+        <label>Разрешённые ID (через запятую) <input name="telegram.allowed_ids"></label>
+      </fieldset>
+      <fieldset class="glass"><legend>MCP-серверы</legend>
+        <label class="full">JSON, как в Claude Desktop <textarea name="mcp.servers" rows="6" spellcheck="false"></textarea></label>
+      </fieldset>
+      <div class="settings-actions"><button class="btn primary" type="submit">Сохранить</button><span class="muted" id="settings-msg"></span></div>
+    </form>
+  </section>
+</main>
+
+<div id="toasts"></div>
+<div class="modal hidden" id="setup">
+  <div class="modal-card glass setup-card">
+    <div class="modal-title">Shikigami 式神 — первый запуск <span class="muted" id="setup-step-n"></span></div>
+    <div class="setup-body">
+      <section class="setup-step" data-step="1">
+        <h3>Знакомство</h3>
+        <label>Язык / Language <select id="setup-lang"><option value="ru">Русский</option><option value="en">English</option></select></label>
+        <label>Как будут звать вашу помощницу <input id="setup-name" placeholder="например, Юки" maxlength="24"></label>
+        <p class="muted">По этому имени она откликается голосом и подписывает реплики. Поменять можно в «Настройках».</p>
+        <label>Как зовут вас <input id="setup-user" placeholder="можно пропустить" maxlength="40"></label>
+        <label>Как ей к вам обращаться <input id="setup-address" placeholder="господин, по имени, «шеф»…" maxlength="40"></label>
+      </section>
+      <section class="setup-step hidden" data-step="2">
+        <h3>Характер</h3>
+        <label class="check"><input type="radio" name="setup-persona" value="kitsune" checked> Кицунэ-горничная: ворчит, но заботится (цундере)</label>
+        <label class="check"><input type="radio" name="setup-persona" value="neutral"> Нейтральная: просто, тепло и по делу</label>
+        <label class="check"><input type="radio" name="setup-persona" value="custom"> Свой характер — опишу словами</label>
+        <textarea id="setup-custom" rows="4" class="hidden" placeholder="Например: весёлая лиса-хакерша, шутит про код, зовёт меня «шеф», не терпит лень…"></textarea>
+      </section>
+      <section class="setup-step hidden" data-step="3">
+        <h3>Внешность</h3>
+        <p class="muted">Выберите модель или добавьте свою .vrm — бесплатные есть на VRoid Hub, свою можно собрать в VRoid Studio
+          (подробно — во вкладке «Помощь»).</p>
+        <div class="setup-models" id="setup-models"></div>
+        <label class="btn">Добавить свою .vrm<input type="file" id="setup-upload" accept=".vrm" hidden></label>
+      </section>
+      <section class="setup-step hidden" data-step="4">
+        <h3>«Мозг»</h3>
+        <p class="muted">Чтобы она понимала просьбы, нужна языковая модель. Бесплатно: ключ NVIDIA (2 минуты, инструкция —
+          во вкладке «Помощь») или своя локальная модель (Ollama, LM Studio).</p>
+        <label>Ключ NVIDIA <input id="setup-key" type="password" placeholder="nvapi-…" autocomplete="off"></label>
+        <div class="detect-row"><button class="btn" type="button" id="setup-detect">🔍 Найти локальную модель</button>
+          <span class="muted" id="setup-detect-out"></span></div>
+        <label>Город для погоды <input id="setup-city" placeholder="можно пропустить"></label>
+        <p class="muted">Голос и распознавание речи — по желанию: «Модули» → скачать. Без них она работает в чате.</p>
+      </section>
+      <p class="setup-err" id="setup-err"></p>
+    </div>
+    <div class="modal-actions"><button class="btn" id="setup-back">Назад</button><button class="btn primary" id="setup-next">Дальше</button></div>
+  </div>
+</div>
+<div class="modal hidden" id="confirm">
+  <div class="modal-card glass">
+    <div class="modal-title">Разрешить?</div>
+    <pre class="modal-text" id="confirm-text"></pre>
+    <div class="modal-actions"><button class="btn" id="confirm-no">Нет</button><button class="btn primary" id="confirm-yes">Да</button></div>
+  </div>
+</div>
+
+<script src="/ui/i18n.js"></script>
+<script type="module" src="/ui/app.js"></script>
+</body>
+</html>

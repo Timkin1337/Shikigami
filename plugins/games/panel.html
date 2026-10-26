@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Мини-игры с {name}</title>
+<style>
+  :root { --bg: #0e0b09; --glass: rgba(255,240,225,.06); --line: rgba(255,200,150,.16); --text: #f3e9df;
+    --muted: #b3a294; --accent: #f0a03c; --her: #ff8fb1; --me: #8fd3ff; --font: "Segoe UI Variable","Segoe UI",system-ui; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font-family: var(--font);
+    display: flex; flex-direction: column; align-items: center; }
+  nav { display: flex; gap: 6px; padding: 12px; flex-wrap: wrap; justify-content: center; }
+  nav button { padding: 6px 12px; font-size: 13px; }
+  nav button, .btn { background: var(--glass); color: var(--text); border: 1px solid var(--line); border-radius: 12px;
+    padding: 8px 16px; font: inherit; cursor: pointer; transition: background .15s, border-color .15s; }
+  nav button.on, .btn.primary { background: rgba(240,160,60,.18); border-color: var(--accent); }
+  nav button:hover, .btn:hover { border-color: var(--accent); }
+  section { display: none; flex-direction: column; align-items: center; gap: 14px; width: 100%; max-width: 560px; padding: 0 16px 24px; }
+  section.on { display: flex; }
+  .score { display: flex; gap: 18px; color: var(--muted); font-size: 14px; }
+  .score b { color: var(--text); }
+  .msg { min-height: 24px; color: var(--accent); text-align: center; }
+  #ttt { display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); gap: 8px; width: min(78vw, 360px); aspect-ratio: 1; }
+  #ttt div { background: var(--glass); border: 1px solid var(--line); border-radius: 14px; display: grid; place-items: center;
+    font-size: clamp(36px, 12vw, 74px); font-weight: 700; cursor: pointer; transition: transform .12s, background .15s; user-select: none; }
+  #ttt div:hover:empty { background: rgba(255,240,225,.1); }
+  #ttt div.X { color: var(--me); cursor: default; }
+  #ttt div.O { color: var(--her); cursor: default; }
+  #ttt div.win { background: rgba(240,160,60,.25); border-color: var(--accent); transform: scale(1.04); }
+  #ttt div.pop { animation: pop .25s ease-out; }
+  @keyframes pop { from { transform: scale(.6); opacity: .2; } to { transform: scale(1); opacity: 1; } }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+  select { background: var(--glass); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; font: inherit; }
+  .hands { display: flex; gap: 14px; }
+  .hands button { font-size: 46px; width: 96px; height: 96px; border-radius: 22px; }
+  .duel { display: flex; gap: 40px; align-items: center; font-size: 60px; min-height: 90px; }
+  .duel small { display: block; font-size: 13px; color: var(--muted); text-align: center; }
+  .duel .her { animation: shake .5s; }
+  @keyframes shake { 0%,100% { transform: none; } 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } }
+  .rounds { color: var(--muted); }
+  input { background: var(--glass); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font: inherit; }
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+  .opts .btn.wrong { border-color: #ff7a7a; background: rgba(255,122,122,.15); }
+  #quiz-q { font-size: 17px; color: var(--text); }
+</style>
+</head>
+<body>
+<nav>
+  <button data-tab="ttt" class="on">Крестики-нолики</button>
+  <button data-tab="rps">Камень-ножницы-бумага</button>
+  <button data-tab="desk">На рабочем столе</button>
+  <button data-tab="guess">Угадай число</button>
+  <button data-tab="cities">Города</button>
+  <button data-tab="quiz">Викторина</button>
+</nav>
+
+<section id="tab-ttt" class="on">
+  <div class="score">Вы: <b id="ttt-me">0</b> · {name}: <b id="ttt-her">0</b> · ничьи: <b id="ttt-draw">0</b></div>
+  <div id="ttt"></div>
+  <div class="msg" id="ttt-msg"></div>
+  <div class="row">
+    <select id="ttt-level"><option value="1">Поддаётся</option><option value="2" selected>Обычная</option><option value="3">Не проигрывает</option></select>
+    <button class="btn primary" id="ttt-new">Новая партия</button>
+    <button class="btn" id="ttt-new-her">Пусть ходит она</button>
+  </div>
+</section>
+
+<section id="tab-rps">
+  <div class="score">Матчи — вы: <b id="rps-me">0</b> · {name}: <b id="rps-her">0</b></div>
+  <div class="rounds" id="rps-rounds">До трёх побед</div>
+  <div class="duel"><div><span id="rps-my">❔</span><small>вы</small></div><div class="vs">⚔</div><div><span id="rps-hers">❔</span><small>{name}</small></div></div>
+  <div class="msg" id="rps-msg"></div>
+  <div class="hands">
+    <button class="btn" data-hand="rock" title="Камень">✊</button>
+    <button class="btn" data-hand="scissors" title="Ножницы">✌️</button>
+    <button class="btn" data-hand="paper" title="Бумага">✋</button>
+  </div>
+</section>
+
+<section id="tab-desk">
+  <div class="score">Рекорд тычков: <b id="best-pokes">0</b> · Прятки: <b id="best-hide">0</b>/6 · Эмоции: <b id="emo-score">0</b> · Реакция: <b id="best-reflex">—</b></div>
+  <div class="row">
+    <button class="btn primary" data-desk="pokes" title="10 секунд — тыкайте в неё как можно чаще">👉 Тычки на скорость</button>
+    <button class="btn primary" data-desk="hide" title="Она прячется по экрану — ловите кликом">🦊 Прятки</button>
+    <button class="btn primary" data-desk="emotion" title="Она показывает эмоцию — угадайте">🎭 Угадай эмоцию</button>
+    <button class="btn primary" data-desk="reflex" title="Ждите «Сейчас!» и кликайте по ней как можно быстрее">⚡ Реакция</button>
+  </div>
+  <div class="msg" id="desk-msg">Смотрите на {name} на рабочем столе.</div>
+  <div class="row" id="emo-guess" style="display:none">
+    <button class="btn" data-emo="happy">😊 Радость</button><button class="btn" data-emo="shy">😳 Смущение</button>
+    <button class="btn" data-emo="angry">😠 Злость</button><button class="btn" data-emo="sad">😢 Грусть</button>
+    <button class="btn" data-emo="surprised">😲 Удивление</button>
+  </div>
+</section>
+
+<section id="tab-guess">
+  <div class="score">Лучший результат: <b id="guess-best">—</b> попыток · сыграно: <b id="guess-games">0</b></div>
+  <div class="msg" id="guess-msg">{name} загадает число от 1 до 100.</div>
+  <div class="row"><input id="guess-n" type="number" min="1" max="100" placeholder="Ваше число"><button class="btn primary" id="guess-try">Проверить</button>
+    <button class="btn" id="guess-new">Новое число</button></div>
+  <div class="rounds" id="guess-log"></div>
+</section>
+
+<section id="tab-cities">
+  <div class="score">Вы победили: <b id="cities-me">0</b> раз</div>
+  <div class="msg" id="cities-msg">Называйте город — она ответит городом на последнюю букву.</div>
+  <div class="row"><input id="cities-in" placeholder="Город"><button class="btn primary" id="cities-go">Ход</button><button class="btn" id="cities-new">Заново</button></div>
+  <div class="rounds" id="cities-log"></div>
+</section>
+
+<section id="tab-quiz">
+  <div class="score">Верно: <b id="quiz-right">0</b> · мимо: <b id="quiz-wrong">0</b></div>
+  <div class="row"><select id="quiz-topic"><option value="">Любая тема</option><option>аниме</option><option>видеоигры</option><option>Майнкрафт</option>
+    <option>наука</option><option>история</option><option>география</option></select><button class="btn primary" id="quiz-new">Вопрос</button></div>
+  <div class="msg" id="quiz-q"></div>
+  <div class="opts" id="quiz-opts"></div>
+  <div class="rounds" id="quiz-fact"></div>
+</section>
+
+<script src="/ui/i18n.js"></script>
+<script>
+const API = "/api/plugins/games";
+const $ = (s) => document.querySelector(s);
+const post = (p, body) => fetch(API + p, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) }).then((r) => r.json());
+const EMOJI = { rock: "✊", scissors: "✌️", paper: "✋" };
+
+// вкладки (вкладку может выбрать и ядро: play_game → ?tab=rps)
+function tab(name) {
+  document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("on", b.dataset.tab === name));
+  document.querySelectorAll("section").forEach((s) => s.classList.toggle("on", s.id === "tab-" + name));
+}
+document.querySelectorAll("nav button").forEach((b) => (b.onclick = () => tab(b.dataset.tab)));
+const want = new URLSearchParams(location.search).get("tab");
+if (want) tab(want);
+
+// ---- крестики-нолики ----
+const cells = [];
+for (let i = 0; i < 9; i++) {
+  const c = document.createElement("div");
+  c.onclick = () => move(i);
+  $("#ttt").appendChild(c);
+  cells.push(c);
+}
+let busy = false;
+function drawTTT(s) {
+  s.board.forEach((v, i) => {
+    const c = cells[i];
+    if (c.textContent !== (v === "X" ? "✕" : v === "O" ? "◯" : "")) { c.classList.remove("pop"); void c.offsetWidth; if (v) c.classList.add("pop"); }
+    c.textContent = v === "X" ? "✕" : v === "O" ? "◯" : "";
+    c.className = (v || "") + (s.line && s.line.includes(i) ? " win" : "") + (c.classList.contains("pop") ? " pop" : "");
+  });
+  $("#ttt-me").textContent = s.score.me; $("#ttt-her").textContent = s.score.her; $("#ttt-draw").textContent = s.score.draw;
+  $("#ttt-level").value = s.level;
+  $("#ttt-msg").textContent = s.over === "X" ? "Вы победили!" : s.over === "O" ? "Победила {name}" : s.over === "draw" ? "Ничья" : busy ? "{name} думает…" : "Ваш ход";
+}
+async function move(i) {
+  if (busy || cells[i].textContent || /win/.test($("#ttt").innerHTML)) return;   // занято или партия окончена
+  busy = true; $("#ttt-msg").textContent = "{name} думает…";
+  cells[i].textContent = "✕"; cells[i].className = "X pop";
+  let s;
+  try { s = await post("/ttt/move", { cell: i }); } finally { busy = false; }
+  drawTTT(s);
+}
+$("#ttt-new").onclick = async () => drawTTT(await post("/ttt/new", { level: +$("#ttt-level").value }));
+$("#ttt-new-her").onclick = async () => drawTTT(await post("/ttt/new", { level: +$("#ttt-level").value, she_starts: true }));
+
+// ---- камень-ножницы-бумага ----
+function drawRPS(s) {
+  $("#rps-me").textContent = s.score.me; $("#rps-her").textContent = s.score.her;
+  $("#rps-rounds").textContent = s.over ? (s.over === "me" ? "Матч ваш!" : "Матч за {name}") : `Раунд ${s.round} · вы ${s.me} : ${s.her} {name} · до трёх побед`;
+  if (s.last) {
+    $("#rps-my").textContent = EMOJI[s.last.me];
+    const h = $("#rps-hers"); h.classList.remove("her"); void h.offsetWidth; h.classList.add("her");
+    h.textContent = EMOJI[s.last.her];
+    $("#rps-msg").textContent = { me: "Раунд ваш", her: "Раунд {name}", draw: "Ничья" }[s.last.result];
+  }
+}
+document.querySelectorAll("[data-hand]").forEach((b) => (b.onclick = async () => {
+  $("#rps-hers").textContent = "🤔";
+  drawRPS(await post("/rps/play", { choice: b.dataset.hand }));
+}));
+
+// ---- игры на рабочем столе ----
+function drawDesk(d) { if (!d) return; $("#best-reflex").textContent = d.reflex?.best ? d.reflex.best + " мс" : "—"; $("#best-pokes").textContent = d.pokes.best; $("#best-hide").textContent = d.hide.best; $("#emo-score").textContent = d.emo.me; }
+const DESK_MSG = { reflex: "Ждите, пока она крикнет «Сейчас!», и сразу кликайте по ней.", pokes: "Тыкайте в {name} на рабочем столе! 10 секунд…", hide: "Ловите её кликом — она прячется по экрану!", emotion: "Что она чувствует? Посмотрите на неё и выберите." };
+document.querySelectorAll("[data-desk]").forEach((b) => (b.onclick = async () => {
+  await post("/desk/start", { kind: b.dataset.desk });
+  $("#desk-msg").textContent = DESK_MSG[b.dataset.desk];
+  $("#emo-guess").style.display = b.dataset.desk === "emotion" ? "flex" : "none";
+}));
+document.querySelectorAll("[data-emo]").forEach((b) => (b.onclick = async () => {
+  const r = await post("/emo/guess", { emo: b.dataset.emo });
+  if (r.error) return;
+  $("#desk-msg").textContent = r.ok ? "Верно!" : `Мимо — это была ${r.right_name}.`;
+  $("#emo-guess").style.display = "none";
+  $("#emo-score").textContent = r.score.me;
+}));
+setInterval(() => fetch(API + "/state").then((r) => r.json()).then((s) => { drawDesk(s.desk); drawMore(s.more); }), 4000);
+
+// ---- угадай число, города, викторина ----
+function drawMore(m) {
+  if (!m) return;
+  $("#guess-best").textContent = m.guess.best || "—"; $("#guess-games").textContent = m.guess.games;
+  $("#cities-me").textContent = m.cities.me;
+  $("#quiz-right").textContent = m.quiz.right; $("#quiz-wrong").textContent = m.quiz.wrong;
+}
+$("#guess-new").onclick = async () => { const r = await post("/guess/new"); $("#guess-msg").textContent = r.text; $("#guess-log").textContent = ""; };
+const guessTry = async () => {
+  const n = +$("#guess-n").value; if (!n) return;
+  const r = await post("/guess/try", { n });
+  $("#guess-msg").textContent = r.text;
+  $("#guess-log").textContent = (r.win ? "" : `${n} — ${r.hint === "больше" ? "больше ↑" : "меньше ↓"}   `) + $("#guess-log").textContent;
+  $("#guess-n").value = ""; $("#guess-n").focus();
+  if (r.win) $("#guess-log").textContent = "";
+};
+$("#guess-try").onclick = guessTry;
+$("#guess-n").onkeydown = (e) => { if (e.key === "Enter") guessTry(); };
+const citiesGo = async () => {
+  const city = $("#cities-in").value.trim(); if (!city) return;
+  $("#cities-msg").textContent = "думает…";
+  const r = await post("/cities/move", { city });
+  $("#cities-msg").textContent = r.text || r.error;
+  if (r.ok) { $("#cities-log").textContent = `${city} → ${r.city || "🏳"}   ` + $("#cities-log").textContent; $("#cities-in").value = ""; }
+  if (r.end) $("#cities-log").textContent = "";
+};
+$("#cities-go").onclick = citiesGo;
+$("#cities-in").onkeydown = (e) => { if (e.key === "Enter") citiesGo(); };
+$("#cities-new").onclick = async () => { const r = await post("/cities/new"); $("#cities-msg").textContent = r.text; $("#cities-log").textContent = ""; };
+$("#quiz-new").onclick = async () => {
+  $("#quiz-q").textContent = "придумывает вопрос…"; $("#quiz-opts").innerHTML = ""; $("#quiz-fact").textContent = "";
+  const r = await post("/quiz/new", { topic: $("#quiz-topic").value });
+  if (r.error) { $("#quiz-q").textContent = r.error; return; }
+  $("#quiz-q").textContent = r.q;
+  $("#quiz-opts").innerHTML = r.options.map((o, i) => `<button class="btn" data-i="${i}">${o.replace(/</g, "&lt;")}</button>`).join("");
+};
+$("#quiz-opts").onclick = async (e) => {
+  const b = e.target.closest("[data-i]"); if (!b) return;
+  const r = await post("/quiz/answer", { i: +b.dataset.i });
+  if (r.error) return;
+  [...$("#quiz-opts").children].forEach((x, i) => { x.disabled = true; if (i === r.answer) x.classList.add("primary"); });
+  if (!r.ok) b.classList.add("wrong");
+  $("#quiz-fact").textContent = (r.ok ? "Верно! " : "Мимо. ") + (r.fact || "");
+  drawMore({ guess: { best: $("#guess-best").textContent, games: $("#guess-games").textContent }, cities: { me: $("#cities-me").textContent }, quiz: r.score });
+};
+
+fetch(API + "/state").then((r) => r.json()).then((s) => { drawTTT(s.ttt); drawRPS(s.rps); drawDesk(s.desk); });
+</script>
+</body>
+</html>

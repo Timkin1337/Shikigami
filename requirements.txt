@@ -1,0 +1,23 @@
+# базовые пакеты ядра (голос и распознавание речи ставятся из вкладки «Модули»)
+aiohttp==3.14.5
+beautifulsoup4==4.15.0
+chess==1.11.2
+mcp==2.3.0
+numpy==2.5.4
+psutil==7.2.2
+pywin32==312
+pycaw==20260927
+comtypes==1.4.17
+pillow==13.0.0
+pypdf==6.21.1
+nvidia-ml-py==13.615.71
+edge-tts==7.3.1
+num2words==0.5.14
+winrt-runtime==3.2.1
+winrt-Windows.Foundation==3.2.1
+winrt-Windows.Foundation.Collections==3.2.1
+winrt-Windows.Media.Control==3.2.1
+winrt-Windows.Media.Ocr==3.2.1
+winrt-Windows.Graphics.Imaging==3.2.1
+winrt-Windows.Storage.Streams==3.2.1
+winrt-Windows.Globalization==3.2.1

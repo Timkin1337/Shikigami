@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Развлечения с {name}</title>
+<style>
+  :root { --bg: #0e0b09; --glass: rgba(255,240,225,.06); --line: rgba(255,200,150,.16); --text: #f3e9df;
+    --muted: #b3a294; --accent: #f0a03c; --her: #ff8fb1; --red: #d8443a; --font: "Segoe UI Variable","Segoe UI",system-ui; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font-family: var(--font);
+    display: flex; flex-direction: column; align-items: center; }
+  nav { display: flex; gap: 6px; padding: 12px; flex-wrap: wrap; justify-content: center; }
+  nav button { padding: 6px 12px; font-size: 13px; }
+  nav button, .btn { background: var(--glass); color: var(--text); border: 1px solid var(--line); border-radius: 12px;
+    padding: 8px 16px; font: inherit; cursor: pointer; transition: background .15s, border-color .15s; }
+  nav button.on, .btn.primary { background: rgba(240,160,60,.18); border-color: var(--accent); }
+  nav button:hover, .btn:hover { border-color: var(--accent); }
+  .btn:disabled { opacity: .4; cursor: default; }
+  section { display: none; flex-direction: column; align-items: center; gap: 14px; width: 100%; max-width: 560px; padding: 0 16px 24px; }
+  section.on { display: flex; }
+  .muted { color: var(--muted); font-size: 14px; text-align: center; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  /* омикудзи — бумажка из храма */
+  .slip { width: min(320px, 90vw); background: #f7efe1; color: #2a1d14; border-radius: 6px; padding: 18px 20px 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.5); border-top: 10px solid var(--red); position: relative; }
+  .slip.drop { animation: unroll .7s cubic-bezier(.2,.9,.3,1.2); transform-origin: top; }
+  @keyframes unroll { from { transform: scaleY(.05); opacity: 0; } to { transform: none; opacity: 1; } }
+  .slip h2 { margin: 0; text-align: center; font-size: 54px; color: var(--red); font-family: "Yu Mincho", "MS Mincho", serif; letter-spacing: 6px; }
+  .slip h3 { margin: 2px 0 12px; text-align: center; font-size: 18px; }
+  .slip dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; font-size: 14px; }
+  .slip dt { font-weight: 700; color: #8a2a22; }
+  .slip .lucky { margin-top: 12px; padding-top: 10px; border-top: 1px dashed #c9b59a; font-size: 13px; text-align: center; }
+  .box { font-size: 64px; cursor: pointer; user-select: none; transition: transform .2s; }
+  .box.shake { animation: shake .6s; }
+  @keyframes shake { 0%,100% { transform: none; } 20% { transform: rotate(-18deg); } 40% { transform: rotate(16deg); }
+    60% { transform: rotate(-12deg); } 80% { transform: rotate(8deg); } }
+  /* наклейки */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; width: 100%; }
+  .st { background: var(--glass); border: 1px solid var(--line); border-radius: 16px; padding: 12px 8px; text-align: center; }
+  .st .i { font-size: 40px; display: block; filter: grayscale(1) brightness(.35); }
+  .st.got { border-color: rgba(240,160,60,.5); }
+  .st.got .i { filter: none; animation: pop .4s; }
+  .st b { display: block; font-size: 13px; margin-top: 6px; }
+  .st small { color: var(--muted); font-size: 11px; }
+  @keyframes pop { from { transform: scale(.4) rotate(-20deg); } to { transform: none; } }
+  .bar { width: 100%; height: 8px; background: var(--glass); border-radius: 6px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); transition: width .4s; }
+  /* 20 вопросов */
+  .ans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
+  .hist { width: 100%; display: flex; flex-direction: column; gap: 4px; max-height: 40vh; overflow-y: auto; font-size: 14px; }
+  .hist div { display: flex; justify-content: space-between; gap: 10px; padding: 6px 10px; background: var(--glass); border-radius: 10px; }
+  .hist span { color: var(--her); white-space: nowrap; }
+  .food .btn { font-size: 26px; padding: 6px 12px; }
+  .q { font-size: 18px; text-align: center; min-height: 28px; }
+  input { background: var(--glass); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font: inherit; }
+</style>
+</head>
+<body>
+<nav>
+  <button data-tab="omikuji">🎴 Омикудзи</button>
+  <button data-tab="q20">🔮 20 вопросов</button>
+  <button data-tab="toys">🍙 Игрушки</button>
+  <button data-tab="alarm">⏰ Будильник</button>
+  <button data-tab="stickers">🦊 Наклейки</button>
+</nav>
+
+<section id="omikuji">
+  <p class="muted">Лисье гадание на день. Одна бумажка в сутки — боги не любят переспрашивать.</p>
+  <div class="box" id="box" title="Потрясти">🏮</div>
+  <button class="btn primary" id="draw">Тянуть предсказание</button>
+  <div id="slip"></div>
+  <p class="muted" id="days"></p>
+</section>
+
+<section id="q20">
+  <p class="muted">Загадайте что угодно — предмет, животное, персонажа. {name} угадает за 20 вопросов. Можно отвечать и голосом.</p>
+  <div class="q" id="q20-q"></div>
+  <div class="ans" id="q20-ans">
+    <button class="btn" data-a="yes">Да</button><button class="btn" data-a="no">Нет</button><button class="btn" data-a="dunno">Не знаю</button>
+    <button class="btn" data-a="maybe">Скорее да</button><button class="btn" data-a="rather_no">Скорее нет</button><button class="btn" data-a="stop">Сдаться</button>
+  </div>
+  <div class="row" id="q20-reveal" hidden><input id="q20-what" placeholder="Что вы загадали?"><button class="btn primary" id="q20-tell">Сказать</button></div>
+  <button class="btn primary" id="q20-start">Я загадал!</button>
+  <div class="hist" id="q20-hist"></div>
+  <p class="muted" id="q20-score"></p>
+</section>
+
+<section id="toys">
+  <p class="muted">Угостите {name}, киньте мячик или сыграйте в прятки. То же самое — правым кликом по ней.</p>
+  <div class="row food" id="foods"></div>
+  <div class="row">
+    <button class="btn" data-toy="ball">🏐 Кинуть мячик</button><button class="btn" data-toy="pillow">🪶 Кинуть подушку</button>
+    <button class="btn" data-toy="seek">🙈 Прятки за окнами</button>
+  </div>
+  <button class="btn primary" data-toy="trick" id="trick" hidden>🎃 Сладость или гадость?</button>
+  <p class="muted">Брокколи она не любит. Проверено.</p>
+</section>
+
+<section id="alarm">
+  <p class="muted">Будильник-вредина: будит голосом и не отстаёт, пока не скажете «встал» и не решите пример. Один раз можно «ещё пять минут».</p>
+  <div class="row"><input id="al-time" type="time" value="07:30"><button class="btn primary" id="al-set">Поставить</button></div>
+  <div class="hist" id="al-list"></div>
+  <div class="row" id="al-ring" hidden><span class="q" id="al-q"></span><input id="al-ans" placeholder="Ответ" size="5"><button class="btn primary" id="al-go">Ответить</button></div>
+  <p class="muted" id="al-msg"></p>
+</section>
+
+<section id="stickers">
+  <p class="muted" id="st-count"></p>
+  <div class="bar"><i id="st-bar"></i></div>
+  <div class="grid" id="st-grid"></div>
+  <p class="muted" id="eggs"></p>
+</section>
+
+<script src="/ui/i18n.js"></script>
+<script>
+const API = "/api/plugins/fun";
+const $ = (s) => document.querySelector(s);
+const post = (p, body) => fetch(API + p, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) }).then((r) => r.json());
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+let busy = false;
+
+function tab(name) {
+  document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("on", b.dataset.tab === name));
+  document.querySelectorAll("section").forEach((s) => s.classList.toggle("on", s.id === name));
+  try { localStorage.funTab = name; } catch {}
+}
+document.querySelectorAll("nav button").forEach((b) => (b.onclick = () => tab(b.dataset.tab)));
+
+function drawSlip(f, anim) {
+  if (!f) { $("#slip").innerHTML = ""; return; }
+  $("#slip").innerHTML = `<div class="slip${anim ? " drop" : ""}"><h2>${esc(f.kanji)}</h2><h3>${esc(f.name)}</h3><dl>` +
+    Object.entries(f.lines).map(([k, v]) => `<dt>${esc(k)}</dt><dd style="margin:0">${esc(v)}</dd>`).join("") +
+    `</dl><div class="lucky">Предмет: <b>${esc(f.item)}</b> · цвет: <b>${esc(f.color)}</b> · число: <b>${f.number}</b></div></div>`;
+  $("#draw").textContent = "Сегодня уже вытянуто";
+}
+$("#draw").onclick = $("#box").onclick = async () => {
+  if (busy) return; busy = true;
+  $("#box").classList.add("shake");
+  await new Promise((r) => setTimeout(r, 650));
+  $("#box").classList.remove("shake");
+  const r = await post("/omikuji");
+  drawSlip(r.fortune, true);
+  busy = false;
+};
+
+function drawQ20(q) {
+  const playing = q.on;
+  $("#q20-start").hidden = playing || q.reveal;
+  $("#q20-ans").style.display = playing ? "" : "none";
+  $("#q20-reveal").hidden = !q.reveal;
+  $("#q20-q").textContent = q.guess ? `Это — ${q.guess}?` : playing ? (q.ask ? `${q.n + 1}. ${q.ask}` : "Думаю…") : "";
+  $("#q20-hist").innerHTML = q.hist.slice().reverse().map((h) => `<div>${esc(h.q)}<span>${esc(h.a)}</span></div>`).join("");
+  $("#q20-score").textContent = `{name} угадала: ${q.score.won} · не угадала: ${q.score.lost}`;
+}
+$("#q20-start").onclick = async () => { $("#q20-q").textContent = "Думаю…"; $("#q20-start").hidden = true; drawQ20(await post("/q20/start")); };
+document.querySelectorAll("#q20-ans .btn").forEach((b) => (b.onclick = async () => {
+  if (busy) return; busy = true;
+  document.querySelectorAll("#q20-ans .btn").forEach((x) => (x.disabled = true));
+  $("#q20-q").textContent = "Думаю…";
+  drawQ20(await post("/q20/answer", { a: b.dataset.a }));
+  document.querySelectorAll("#q20-ans .btn").forEach((x) => (x.disabled = false));
+  busy = false;
+}));
+$("#q20-tell").onclick = async () => { const t = $("#q20-what").value.trim(); if (t) { $("#q20-what").value = ""; drawQ20(await post("/q20/reveal", { text: t })); } };
+
+const FOODS = ["🍙", "🍡", "🍵", "🍪", "🍬", "🍎", "🥦"];
+$("#foods").innerHTML = FOODS.map((f) => `<button class="btn" data-food="${f}">${f}</button>`).join("");
+document.querySelectorAll("[data-food]").forEach((b) => (b.onclick = () => post("/toy", { what: "feed", food: b.dataset.food })));
+document.querySelectorAll("[data-toy]").forEach((b) => (b.onclick = () => post("/toy", { what: b.dataset.toy })));
+function drawAlarm(s) {
+  $("#trick").hidden = !s.halloween;
+  $("#al-list").innerHTML = s.alarms.map((a) => `<div>⏰ ${esc(a.label)}<span><button class="btn" data-cancel="${a.id}">✕</button></span></div>`).join("")
+    || '<p class="muted">Будильников нет.</p>';
+  document.querySelectorAll("[data-cancel]").forEach((b) => (b.onclick = async () => drawAlarm(await post("/alarm", { cancel: +b.dataset.cancel }))));
+  $("#al-ring").hidden = !(s.ring && s.ring.stage === "math");
+  $("#al-q").textContent = s.ring?.q ? s.ring.q + " =" : "";
+  if (s.ring && s.ring.stage === "ring") $("#al-msg").textContent = "Звенит! Скажите {name} «встал».";
+}
+$("#al-set").onclick = async () => { const r = await post("/alarm", { time: $("#al-time").value }); $("#al-msg").textContent = r.error || "Поставлен."; drawAlarm(r); };
+$("#al-go").onclick = async () => { drawAlarm(await post("/alarm", { answer: $("#al-ans").value })); $("#al-ans").value = ""; };
+
+function drawStickers(s) {
+  const got = s.stickers.filter((x) => x.got).length;
+  $("#st-count").textContent = `Собрано ${got} из ${s.stickers.length}`;
+  $("#st-bar").style.width = (100 * got / s.stickers.length) + "%";
+  $("#st-grid").innerHTML = s.stickers.map((x) => `<div class="st${x.got ? " got" : ""}" title="${x.got ? new Date(x.got * 1000).toLocaleDateString("ru") : ""}">` +
+    `<span class="i">${x.got ? x.icon : (x.desc === "Секрет" ? "❔" : x.icon)}</span><b>${esc(x.got || x.desc !== "Секрет" ? x.title : "???")}</b>` +
+    `<small>${esc(x.desc)}</small></div>`).join("");
+  $("#eggs").textContent = `Секретных фраз найдено: ${s.eggs.found} из ${s.eggs.total}. Попробуйте сказать {name} что-нибудь странное.`;
+}
+
+async function refresh(first) {
+  const s = await fetch(API + "/state").then((r) => r.json());
+  if (first || !document.querySelector(".slip")) drawSlip(s.fortune, false);
+  $("#days").textContent = s.fortune_days ? `Гаданий всего: ${s.fortune_days}` : "";
+  if (!busy) drawQ20(s.q20);
+  drawStickers(s);
+  if (document.activeElement?.tagName !== "INPUT") drawAlarm(s);
+}
+const want = new URLSearchParams(location.search).get("tab") || location.hash.slice(1);
+let saved = null; try { saved = localStorage.funTab; } catch {}
+tab(["omikuji", "q20", "toys", "alarm", "stickers"].includes(want) ? want : saved || "omikuji");
+refresh(true);
+setInterval(refresh, 2500);
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# Your keys and data — never commit
+.env
+config.json
+data/*.db*
+data/*.json
+data/*.log
+data/audio/
+data/cache/
+data/uploads/
+data/recordings/
+data/shots/
+data/voice-samples/
+data/models/.thumbs/
+
+# Build output and dependencies
+.venv/
+shell/node_modules/
+__pycache__/
+*.pyc
+Shikigami.exe

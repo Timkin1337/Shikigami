@@ -1,0 +1,19 @@
+{
+  "name": "shikigami-shell",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shikigami — AI desktop companion: windows, tray, hotkeys, avatar",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^44.9.0"
+  },
+  "dependencies": {
+    "@pixiv/three-vrm": "^3.5.5",
+    "@pixiv/three-vrm-animation": "^3.5.5",
+    "three": "^0.186.1"
+  },
+  "productName": "Shikigami"
+}
