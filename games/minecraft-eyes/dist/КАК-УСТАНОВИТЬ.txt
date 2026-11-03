@@ -1,0 +1,42 @@
+Мод «Глаза» для Minecraft — Shikigami видит, что происходит у вас в игре
+=====================================================================
+
+С модом помощница знает здоровье, голод, что в руках, биом, время суток и кто рядом:
+предупредит о крипере за спиной, подскажет поесть, скажет, что темнеет. Без мода она
+видит только чат и лог игры.
+
+Что нужно
+- Minecraft Java Edition 1.21.11
+- NeoForge 21.11 для этой версии (https://neoforged.net — установщик; в TLauncher можно
+  выбрать версию «NeoForge 1.21.11»)
+
+Установка
+1. Один раз запустите Minecraft с NeoForge, чтобы появилась папка mods.
+2. Скопируйте shikigami_eyes-1.0.0.jar в папку mods вашей сборки:
+   обычно %APPDATA%\.minecraft\mods (у TLauncher и других лаунчеров — папка игры\mods).
+3. Запустите Shikigami, потом игру. В Shikigami вкладка «Майнкрафт»: зелёная точка у
+   «Видит мир» значит, что мод на связи.
+
+Хорошо знать
+- Мод только для клиента: на сервер ставить не нужно, работает и в одиночной игре, и на серверах.
+- Данные уходят только в Shikigami на этом же ПК (http://127.0.0.1:7853), в интернет — ничего.
+  Если у Shikigami другой адрес, задайте его переменной окружения SHIKIGAMI_URL.
+- Удалить мод — удалить jar из папки mods.
+
+
+"Eyes" mod for Minecraft — lets Shikigami see what happens in your game
+======================================================================
+
+With the mod she knows your health, hunger, held item, biome, time of day and who is nearby:
+warns about a creeper behind you, reminds you to eat, tells you night is coming.
+
+Requirements: Minecraft Java 1.21.11 with NeoForge 21.11 (https://neoforged.net).
+
+Install
+1. Run Minecraft with NeoForge once so the mods folder appears.
+2. Copy shikigami_eyes-1.0.0.jar into your mods folder (usually %APPDATA%\.minecraft\mods).
+3. Start Shikigami, then the game. A green dot next to "Sees the world" on the Minecraft tab
+   means the mod is connected.
+
+Client-only: nothing to install on servers. Data goes only to Shikigami on this PC
+(http://127.0.0.1:7853), never to the internet. Different address: set SHIKIGAMI_URL.

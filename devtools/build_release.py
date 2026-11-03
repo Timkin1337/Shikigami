@@ -23,17 +23,19 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-VERSION = "0.9.0"
-OUT = ROOT.parent / "Shikigami-release"
-APP = OUT / "Shikigami"
+VERSION = "0.9.1"
+OUT = ROOT.parent / "release"
+APP = OUT / "build"                  # папка программы; установщик — в OUT/<версия>, рядом с portable и заметками
 DEV = json.loads((ROOT / "data" / "dev-paths.json").read_text(encoding="utf-8"))
 
 # из git — только это
 TAKE = ["core", "plugins", "ui", "data/animations", "data/voices", "shikigami.py", "LICENSE", "CREDITS.md"]
 SKIP = ["ui/avatar-debug.js", "core/voice/voice_design.py"]          # отладка и инструмент разработчика
+MOD = "games/minecraft-eyes/dist"                                    # мод «Глаза» для Minecraft: jar и инструкция → minecraft/
 MODELS = ["Seed-san.vrm", "Twist-Sample.vrm"]                       # VRM Public License 1.0, распространять можно
 # своя модель проекта (лиса-горничная, VRoid Studio): в релиз — под нейтральным именем, без имени разработчика внутри
 # источник — data/models/<own_model из dev-paths.json>, в публичном репозитории уже Kitsune-Maid.vrm
@@ -65,7 +67,7 @@ def export_sources(dst):
     step("исходники из git (HEAD)")
     with tempfile.TemporaryDirectory() as tmp:
         tar = Path(tmp) / "src.tar"
-        run("git", "-C", ROOT, "archive", "-o", tar, "HEAD", *TAKE, "shell/main.js", "shell/preload.js", "shell/package.json",
+        run("git", "-C", ROOT, "archive", "-o", tar, "HEAD", *TAKE, MOD, "shell/main.js", "shell/preload.js", "shell/package.json",
             "shell/assets")
         with tarfile.open(tar) as t:
             t.extractall(Path(tmp) / "src", filter="data")
@@ -77,6 +79,7 @@ def export_sources(dst):
             (dst / item).unlink(missing_ok=True)
         app = dst / "resources" / "app"                              # оболочка Electron
         shutil.copytree(src / "shell", app)
+        shutil.copytree(src / MOD, dst / "minecraft")
     (dst / "data" / "models").mkdir(parents=True, exist_ok=True)
     for m in MODELS:
         shutil.copy2(ROOT / "data" / "models" / m, dst / "data" / "models" / m)
@@ -169,6 +172,10 @@ def scan(dst):
         rel = p.relative_to(dst).as_posix()
         if FORBIDDEN.search(rel):
             bad.append(f"{rel}: в имени файла")
+        if p.suffix == ".jar":                                        # мод «Глаза»: jar сжат, смотрим внутрь
+            with zipfile.ZipFile(p) as z:
+                bad += [f"{rel}!{n}: внутри jar" for n in z.namelist() if FORBIDDEN.search(n + z.read(n).decode("utf-8", "ignore"))]
+            continue
         if not p.is_file() or rel.startswith(("runtime/", "shell/node_modules/", "locales/")) or p.suffix in (".dll", ".pak", ".bin", ".dat", ".exe", ".wav", ".vrm"):
             continue
         if p.suffix not in (".py", ".js", ".html", ".css", ".json", ".md", ".txt", ".bat", ".iss"):
@@ -186,8 +193,10 @@ def scan(dst):
 
 def installer():
     step("установщик")
-    run(DEV["iscc"], f"/DAppVersion={VERSION}", f"/DSrc={APP}", f"/DOut={OUT}", ROOT / "devtools" / "installer.iss")
-    exe = OUT / f"Shikigami-Setup-{VERSION}.exe"
+    rel = OUT / VERSION
+    rel.mkdir(parents=True, exist_ok=True)
+    run(DEV["iscc"], f"/DAppVersion={VERSION}", f"/DSrc={APP}", f"/DOut={rel}", ROOT / "devtools" / "installer.iss")
+    exe = rel / f"Shikigami-Setup-{VERSION}.exe"
     print(exe, f"{exe.stat().st_size >> 20} МБ")
 
 

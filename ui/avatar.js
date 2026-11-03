@@ -356,6 +356,8 @@ function playClip(kind) {
   const from = st.oneShot || st.idleAction;
   if (from === a && a.isRunning()) return true;
   a.reset().setLoop(kind === "dance" || kind === "walk" ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
+  // один и тот же клип каждый раз чуть быстрее или медленнее — повтор не узнаётся; шаг и танец привязаны к ходу и такту
+  a.timeScale = kind === "walk" || kind === "dance" ? 1 : 0.92 + Math.random() * 0.16;
   a.clampWhenFinished = true;
   a.setEffectiveWeight(1).play();
   if (from && from !== a) from.crossFadeTo(a, 0.5, false); else a.fadeIn(0.5);
@@ -774,6 +776,32 @@ const gtr = { name: undefined, p: 1, from: {} };   // переход между 
 const GBONES = ["spine", "chest", "upperChest", "neck", "head"];
 const clampN = THREE.MathUtils.clamp;
 
+// ---------- взгляд в сторону ----------
+// Живые люди не смотрят в глаза собеседнику непрерывно: отводят взгляд, когда начинают говорить, вспоминают,
+// смущаются. Сдвиг идёт в те же nx/ny, что и курсор, поэтому глаза прыгают быстро (damp 14), а голова доворачивает
+// за ними мягче (пружина 6) — сама собой получается связка «глаза ведут, голова догоняет».
+const glance = { until: 0, next: 4, x: 0, y: 0 };
+function glanceTick(t, emo) {
+  if (t < glance.until) return glance;
+  if (t < glance.next) return null;
+  const plan = planGlance({ emo, talking: st.talk > 0.5, thinking: st.thinking, listening: st.listening, friend: st.friend ?? 0 });
+  glance.next = t + (plan?.pause ?? 5);
+  if (!plan) return null;
+  glance.x = plan.x; glance.y = plan.y; glance.until = t + plan.dur;
+  return glance;
+}
+// Характер взгляда: куда, надолго ли и как часто отводит глаза.
+// ctx: emo — "neutral" | "happy" | "shy" | "angry" | "sad" | "surprised" | "relaxed";
+//      talking, thinking, listening — булевы; friend — уровень дружбы (0, если выключена).
+// Вернуть { x, y, dur, pause } или null (сейчас не отводит, следующая проверка через 5 с).
+//   x, y  — сдвиг взгляда в долях экрана: ±0.3 — едва косится, ±1 — заметно в сторону; y > 0 — вверх
+//   dur   — сколько секунд смотрит в сторону (0.3–2)
+//   pause — через сколько секунд после этого решать снова
+function planGlance(ctx) {
+  // TODO: характер лисы-горничной
+  return null;
+}
+
 function animate() {
   if (st.gameMode && !st.camMode) { clock.getDelta(); setTimeout(animate, 1000); return; }   // игровой режим: ни кадра, пока игра
   if (st.camMode) setTimeout(animate, 1000 / 24);      // «вебка»: 24 кадра хватает, остальное — игре
@@ -852,6 +880,10 @@ function poseFrame(dt) {
   const dance = st.danceW;
   const beat = t * Math.PI * (112 / 60);
   addRot(B.chest || B.spine, breath * 0.015, 0, 0);
+  // вдох поднимает и плечи: без этого дышит одна грудь, а плечи стоят вешалкой
+  const inhale = (breath + 1) * 0.5 * 0.022 * v0;
+  addRot(B.leftShoulder, 0, 0, inhale);
+  addRot(B.rightShoulder, 0, 0, -inhale);
   addRot(B.spine, 0, 0, Math.sin(t * 0.6) * 0.015 + dance * Math.sin(beat) * 0.07);
   // перенос веса с ноги на ногу (период ~11 с): таз чуть наклоняется, бёдра компенсируют — ступни на месте
   const shift = (Math.sin(t * 0.57) + 0.35 * Math.sin(t * 0.23 + 1.3)) * 0.018 * (1 - st.sitting) * (1 - dance) * (1 - walkSt.w);
@@ -861,6 +893,12 @@ function poseFrame(dt) {
   addRot(B.spine, 0, 0, -shift * 0.8);
   // медленный дрейф шеи суммой несоизмеримых синусов — поза не выглядит замороженной
   addRot(B.neck, (Math.sin(t * 0.31) + Math.sin(t * 0.83 + 2)) * 0.008, (Math.sin(t * 0.27 + 1) + Math.sin(t * 0.71)) * 0.012, 0);
+  // и руки в покое не висят отвесом: свой дрейф у каждой, в разной фазе (в клипе-жесте гаснет вместе с idleW)
+  for (const [s, ph, m] of [["left", 0, 1], ["right", 2.1, -1]]) {
+    const ax = (Math.sin(t * 0.41 + ph) + Math.sin(t * 0.97 + ph * 1.7)) * 0.009 * idleW;
+    const az = (Math.sin(t * 0.33 + ph + 1) + Math.sin(t * 0.79 + ph)) * 0.007 * idleW;
+    addRot(B[s + "UpperArm"], ax * v0, 0, m * az * v0);
+  }
   // голова кружится: покачивание по кругу, затухает
   if (t < dz.until) { const w = Math.min(1, (dz.until - t) / 1.2); addRot(B.neck, Math.sin(t * 6) * 0.07 * w, 0, Math.cos(t * 6) * 0.08 * w); }
   let hipsY = B.hips.position.y;
@@ -936,6 +974,9 @@ function poseFrame(dt) {
   const wl = !st.lookAt && watchLook();
   if (wl) { const pp = _lv.copy(wl).project(camera); nx = clampN(pp.x, -3, 3); ny = clampN(pp.y, -3, 3); }
   if (st.lookAt) { const pp = _lv.copy(st.lookAt).project(camera); nx = clampN(pp.x, -3, 3); ny = clampN(pp.y, -3, 3); }
+  // отводит взгляд от хозяина: только когда смотрит на курсор, а не на предмет или по сторонам
+  const g = !st.lookAt && !wl && st.lookAround <= 0 && !home.on && !st.sleeping ? glanceTick(t, em) : null;
+  if (g) { nx = clampN(nx + g.x, -3, 3); ny = clampN(ny + g.y, -3, 3); }
   const lookTo = st.sleeping || st.patting || ["bow", "shy", "angry", "sleep"].includes(name) ? 0.2
     : life.mode === "walk" || life.mode === "turn" ? 0.35 : 1;
   const L = st.look;
@@ -1789,6 +1830,26 @@ function levelLoop() {
   requestAnimationFrame(levelLoop);
 }
 levelLoop();
+// Звоночек «слушаю»: хозяин позвал её из другого конца комнаты — без звука не понять, услышала ли.
+// recognizing в обычном режиме приходит, только когда tiny уже расслышала имя; wake и listening — горячая клавиша,
+// «{name}?» без команды и ожидание ответа на её вопрос. Звенит один раз на вход: дальше по цепочке
+// recognizing → wake → listening → recognizing молчит, до следующего idle.
+// Мимо analyser: иначе липсинк принял бы звон за речь и шевельнул губами.
+const VOICE_ON = new Set(["wake", "listening", "recognizing"]);
+async function listenChime() {
+  if (cfg.voice?.listen_chime === false) return;
+  try { await actx.resume(); } catch { return; }
+  const t0 = actx.currentTime + 0.01, vol = cfg.voice?.listen_chime_volume ?? 0.15;
+  for (const [f, d] of [[1318.5, 0], [1760, 0.09]]) {        // ми и ля шестой октавы — «динь-дилинь» колокольчика
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = "sine"; o.frequency.value = f;
+    g.gain.setValueAtTime(0, t0 + d);
+    g.gain.linearRampToValueAtTime(vol, t0 + d + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + d + 0.45);
+    o.connect(g).connect(actx.destination);
+    o.start(t0 + d); o.stop(t0 + d + 0.5);
+  }
+}
 function playSpeech(m) {
   activity();
   speechQueue = speechQueue.then(() => new Promise(async (resolve) => {
@@ -1904,6 +1965,8 @@ function connect() {
         break;
       case "avatar.gesture": activity(); gesture(m.name, m.seconds || 2.5); break;
       case "voice.state":
+        if (VOICE_ON.has(m.state) && !VOICE_ON.has(st.voiceState)) listenChime();
+        st.voiceState = m.state;
         st.listening = m.state === "listening" || m.state === "wake";
         if (st.listening) activity();
         showState({ listening: "слушаю…", wake: "слушаю…", recognizing: "распознаю…" }[m.state] || (st.thinking ? "думает…" : ""));

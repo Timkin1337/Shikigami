@@ -1,5 +1,5 @@
 ; Установщик Shikigami (Inno Setup 6). Собирает devtools/build_release.py:
-;   ISCC /DAppVersion=0.9.0 /DSrc=<папка программы> /DOut=<куда положить> devtools\installer.iss
+;   ISCC /DAppVersion=0.9.1 /DSrc=<папка программы> /DOut=<куда положить> devtools\installer.iss
 ; Ставится для одного пользователя, без прав администратора: модули (голос, распознавание) докачивают
 ; библиотеки в папку программы, а в Program Files без администратора писать нельзя.
 #ifndef AppVersion
