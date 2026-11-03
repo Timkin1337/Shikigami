@@ -52,17 +52,29 @@ def _norm(s):
     return re.sub(r"[^\wё ]", " ", s.lower().replace("ё", "е")).split()
 
 
+# Имя записано кириллицей, а Whisper на английском пишет его латиницей (или наоборот) — буквы не совпадали вовсе,
+# и в английском режиме она не слышала, что её зовут. Сравниваем ещё и в транслите.
+_LAT = str.maketrans({"а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ж": "zh", "з": "z", "и": "i", "й": "y",
+                      "к": "k", "л": "l", "м": "m", "н": "n", "о": "o", "п": "p", "р": "r", "с": "s", "т": "t", "у": "u",
+                      "ф": "f", "х": "h", "ц": "ts", "ч": "ch", "ш": "sh", "щ": "sch", "ъ": "", "ы": "y", "ь": "", "э": "e",
+                      "ю": "yu", "я": "ya"})
+
+
+def _alike(a, b):
+    return max(difflib.SequenceMatcher(None, a, b).ratio(), difflib.SequenceMatcher(None, a.translate(_LAT), b.translate(_LAT)).ratio())
+
+
 def strip_wake(text, wake):
     """Если фраза начинается с имени (с учётом ошибок распознавания) — вернуть остаток, иначе None."""
     words = _norm(text)
     w = wake.lower().replace("ё", "е")
     for n in (1, 2):  # имя иногда слышится раздельно («ко хаку»)
         head = "".join(words[:n])
-        if head and difflib.SequenceMatcher(None, head, w).ratio() >= 0.72:
+        if head and _alike(head, w) >= 0.72:
             rest = re.split(r"[\s,.!?]+", text.strip(), maxsplit=n)
             return rest[n].strip(" ,.!?") if len(rest) > n else ""
     # «Эй, {name}» / «Слушай, {name}»
-    if len(words) > 1 and difflib.SequenceMatcher(None, words[1], w).ratio() >= 0.75:
+    if len(words) > 1 and _alike(words[1], w) >= 0.75:
         rest = re.split(r"[\s,.!?]+", text.strip(), maxsplit=2)
         return rest[2].strip(" ,.!?") if len(rest) > 2 else ""
     return None
@@ -78,7 +90,7 @@ def name_prob(words, wake):
         for n in (1, 2):  # «ко хаку» — два слова
             part = glued[i:i + n]
             head = "".join("".join(x[0]) for x in part)
-            if head and difflib.SequenceMatcher(None, head, w).ratio() >= 0.72:
+            if head and _alike(head, w) >= 0.72:
                 best = max(best, min(x[1] for x in part))
     return best
 

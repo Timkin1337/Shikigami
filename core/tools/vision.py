@@ -17,7 +17,7 @@ from . import tool, S
 FALLBACK = ["nvidia/nemotron-3.5-super-vl-120b-a12b", "meta/llama-3.2-90b-vision-instruct", "google/gemma-3-12b-it",
             "meta/llama-3.2-11b-vision-instruct"]
 PROMPT = ("Это снимок экрана пользователя{where}. Поверх экрана может быть видна аниме-девушка — это сама ассистентка, "
-          "её не описывай. Ответь по-русски, по делу, 3–6 предложений: что на экране и что происходит (если игра — что за "
+          "её не описывай. Ответь {lang}, по делу, 3–6 предложений: что на экране и что происходит (если игра — что за "
           "игра, сцена, что делает игрок, что видно в интерфейсе: здоровье, задания, карта). Не выдумывай того, чего не видно; "
           "мелкий текст, который не читается, так и назови. Вопрос пользователя: {q}")
 
@@ -80,7 +80,7 @@ def _jpeg(img, side=1280):
     return base64.b64encode(b.getvalue()).decode()
 
 
-IMAGE_PROMPT = ("Пользователь прислал эту картинку в чат. Ответь по-русски, по делу, 3–8 предложений: что на ней, текст на ней "
+IMAGE_PROMPT = ("Пользователь прислал эту картинку в чат. Ответь {lang}, по делу, 3–8 предложений: что на ней, текст на ней "
                 "(если читается — дословно), детали, важные для вопроса. Не выдумывай того, чего не видно. Вопрос пользователя: {q}")
 
 
@@ -92,7 +92,9 @@ async def describe(img, question, title="", prompt=None):
     models = [config.get("vision.model")] if config.get("vision.model") else []
     models += [m for m in FALLBACK if m not in models] if name == "nvidia" else []
     data = _jpeg(img)
-    text = (prompt or PROMPT).format(where=f" (окно «{title}»)" if title else "", q=question or "что на экране?")
+    from ..i18n import lang                     # описание идёт в черновик ответа — на языке программы, иначе тянет русский в английский режим
+    text = (prompt or PROMPT).format(where=f" (окно «{title}»)" if title else "", q=question or "что на экране?",
+                                     lang="по-русски" if lang() == "ru" else "in English")
     content = [{"type": "text", "text": text},
                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{data}"}}]
     errors = []
