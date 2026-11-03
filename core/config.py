@@ -77,7 +77,8 @@ DEFAULTS = {
         "stt_model": "small",       # tiny | base | small | medium
         "stt_hint": "",             # свои слова для распознавания: ники, игры, моды (через запятую)
         "wake_min_prob": 0.4,       # если имя расслышала только tiny — с какой уверенностью ей верить
-        "listen_chime": True, "listen_chime_volume": 0.15,   # звоночек, когда услышала имя и слушает команду
+        "listen_chime": True, "listen_chime_volume": 0.4,    # звоночек, когда услышала имя и слушает команду (0.15 — не слышно)
+        "kokoro_voice": "af_bella",  # офлайн-голос английского режима (модуль Kokoro): af_bella | af_nicole | af_sarah | af_sky…
         "stt_device": "auto",       # auto | cuda | cpu
         "tts_speaker": "xenia", "ptt_key": "", "ptt_mode": "hold", "tts_engine": "silero",
         "espeech_voice": "myagkaya", "espeech_strength": "off", "espeech_steps": 24,     # голос с эмоциями: тембр, сила эмоций, качество

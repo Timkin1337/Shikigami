@@ -1839,7 +1839,7 @@ const VOICE_ON = new Set(["wake", "listening", "recognizing"]);
 async function listenChime() {
   if (cfg.voice?.listen_chime === false) return;
   try { await actx.resume(); } catch { return; }
-  const t0 = actx.currentTime + 0.01, vol = cfg.voice?.listen_chime_volume ?? 0.15;
+  const t0 = actx.currentTime + 0.01, vol = cfg.voice?.listen_chime_volume ?? 0.4;
   for (const [f, d] of [[1318.5, 0], [1760, 0.09]]) {        // ми и ля шестой октавы — «динь-дилинь» колокольчика
     const o = actx.createOscillator(), g = actx.createGain();
     o.type = "sine"; o.frequency.value = f;

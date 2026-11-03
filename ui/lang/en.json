@@ -1743,6 +1743,7 @@
  "Лицензия: CC BY-NC-SA 4.0 — только некоммерческое · models.silero.ai": "License: CC BY-NC-SA 4.0 — non-commercial only · models.silero.ai",
  "Piper «Ирина» (запасной)": "Piper “Irina” (backup)",
  "Запасной офлайн-голос, если Silero не скачался. Звучит взрослее и суше.": "Backup offline voice in case Silero didn't download. Sounds older and drier.",
+ "Офлайн-голос для английского режима: живой, без интернета. Голоса af_bella, af_nicole, af_sarah, af_sky.": "Offline voice for English mode: natural, no internet needed. Voices af_bella, af_nicole, af_sarah, af_sky.",
  "Лицензия: MIT (sherpa-onnx), голос — piper-voices · github.com/k2-fsa/sherpa-onnx": "License: MIT (sherpa-onnx), voice — piper-voices · github.com/k2-fsa/sherpa-onnx",
  "Голос с эмоциями (ESpeech)": "Emotional voice (ESpeech)",
  "Живой голос {name}: радуется, грустит, ворчит, смущается — по настроению ответа. Только русский. Ставит своё окружение Python и модель ~2,7 ГБ.": "{name}'s living voice: happy, sad, grumpy, shy — matching the reply's mood. Russian only. Installs its own Python environment and a ~2.7 GB model.",

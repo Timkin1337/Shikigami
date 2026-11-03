@@ -21,6 +21,11 @@ UNITS = [(r"(\d)\s*%", r"\1 процентов"), (r"(\d)\s*°C?", r"\1 град
          (r"\bEUR\b", "евро"), (r"\bCNY\b", "юань"), (r"\bRUB\b", "российских рублей"), (r"\bBYN\b", "белорусских рублей"),
          (r"(\d)\s*Br\b", r"\1 рублей"), (r"\bCPU\b", "процессор"),
          (r"\bGPU\b", "видеокарта"), (r"\bRAM\b", "память"), (r"\bID\b", "номер")]
+# по-английски — свои слова: русские «градусов» и «процентов» влезали в английскую речь
+UNITS_EN = [(r"(\d)\s*%", r"\1 percent"), (r"(\d)\s*°C", r"\1 degrees Celsius"), (r"(\d)\s*°", r"\1 degrees"),
+            (r"(\d)\s*ГБ", r"\1 gigabytes"), (r"(\d)\s*МБ", r"\1 megabytes"), (r"(\d)\s*GB\b", r"\1 gigabytes"),
+            (r"(\d)\s*MB\b", r"\1 megabytes"), (r"(\d)\s*м/с", r"\1 meters per second"), (r"(\d)\s*m/s\b", r"\1 meters per second"),
+            (r"(\d)\s*\$", r"\1 dollars"), (r"(\d)\s*€", r"\1 euros"), (r"(\d)\s*₽", r"\1 rubles")]
 
 
 def _num_words(text):
@@ -43,14 +48,14 @@ SPOKEN = [(r"(?i)\bхмпф\b", "хм"), (r"(?i)\bхмф\b", "хм"), (r"(?i)\b�
 def normalize(text):
     for pat, rep in SPOKEN:          # междометия, которые синтез читал по буквам («Х-М-П-Ф»)
         text = re.sub(pat, rep, text)
-    for pat, rep in UNITS:
-        text = re.sub(pat, rep, text)
     from ..i18n import lang
+    for pat, rep in UNITS if lang() == "ru" else UNITS_EN:
+        text = re.sub(pat, rep, text)
     if lang() == "ru":
         text = _num_words(text)
     text = re.sub(r"[«»\"“”()\[\]]", "", text)
     text = text.replace("—", ", ").replace("…", ".")
-    text = re.sub(r"[^\w\s.,!?:;\-ёЁ+]", " ", text)
+    text = re.sub(r"[^\w\s.,!?:;\-ёЁ+']" if lang() != "ru" else r"[^\w\s.,!?:;\-ёЁ+]", " ", text)   # «It's» — не «It s»
     return re.sub(r"\s+", " ", text).strip()
 
 
@@ -136,6 +141,9 @@ class PiperTTS:
         self.tts = sherpa_onnx.OfflineTts(cfg)
         print("голос: Piper (Ирина)", flush=True)
 
+    def sid(self, speaker):
+        return 0
+
     def synth(self, text, speaker=None, pitch="medium", rate="medium"):
         with self.lock:
             if self.tts is None:
@@ -143,8 +151,9 @@ class PiperTTS:
             f = PITCH.get(pitch, 1.0)
             speed = RATE.get(rate, 1.0) / f
             out = []
+            sid = self.sid(speaker)
             for chunk in _chunks(normalize(text)):
-                a = self.tts.generate(chunk, sid=0, speed=speed)
+                a = self.tts.generate(chunk, sid=sid, speed=speed)
                 x = np.asarray(a.samples, dtype=np.float32)
                 sr = a.sample_rate
                 if f != 1.0 and len(x) > 1:
@@ -153,6 +162,42 @@ class PiperTTS:
                 out.append(x)
                 out.append(np.zeros(int(sr * 0.12), dtype=np.float32))
             return (np.concatenate(out) if out else np.zeros(1, dtype=np.float32)), (sr if out else 22050)
+
+
+# латиница: espeak внутри Kokoro тоже не читает кириллицу в пути. Полная точность, а не int8: на Ryzen 7 int8 шёл
+# медленнее речи (×0,75), fp32 — ×2,3 при тех же 4 потоках
+KOKORO = ASCII_HOME / "kokoro" / "kokoro-en-v0_19"
+KOKORO_VOICES = ["af", "af_bella", "af_nicole", "af_sarah", "af_sky", "am_adam", "am_michael", "bf_emma", "bf_isabella",
+                 "bm_george", "bm_lewis"]                    # порядок = sid в voices.bin модели v0_19
+
+
+class KokoroTTS(PiperTTS):
+    """Английский офлайн-голос: Kokoro-82M через тот же sherpa-onnx (Apache-2.0). Высота и темп — как у Piper."""
+
+    def __init__(self):
+        super().__init__()
+        self.version = "kokoro-en"
+        self.speakers = KOKORO_VOICES
+
+    @staticmethod
+    def ready():
+        return (KOKORO / "voices.bin").exists()
+
+    def load(self):
+        import sherpa_onnx
+        cfg = sherpa_onnx.OfflineTtsConfig(
+            model=sherpa_onnx.OfflineTtsModelConfig(
+                kokoro=sherpa_onnx.OfflineTtsKokoroModelConfig(model=str(next(KOKORO.glob("*.onnx"))), voices=str(KOKORO / "voices.bin"),
+                                                               tokens=str(KOKORO / "tokens.txt"), data_dir=str(KOKORO / "espeak-ng-data")),
+                num_threads=4, provider="cpu"),
+            max_num_sentences=1)                                      # Kokoro другое не принимает
+        self.tts = sherpa_onnx.OfflineTts(cfg)
+        print("голос: Kokoro (English)", flush=True)
+
+    def sid(self, speaker):
+        from ..config import config
+        voice = speaker if speaker in KOKORO_VOICES else config.get("voice.kokoro_voice", "af_bella")
+        return KOKORO_VOICES.index(voice) if voice in KOKORO_VOICES else 1
 
 
 EDGE_PITCH = {"x-low": "-20Hz", "low": "-10Hz", "medium": "+0Hz", "high": "+18Hz", "x-high": "+32Hz"}
@@ -358,6 +403,7 @@ class Router:
         self.offline = SileroTTS() if any((MODELS / f"{v}.pt").exists() for v, _ in URLS) else PiperTTS()
         self.edge = EdgeTTS()
         self.espeech = EspeechTTS()
+        self.kokoro = KokoroTTS()
         self.version = self.offline.version
 
     def load(self):
@@ -387,6 +433,12 @@ class Router:
                 return self.espeech.synth(text, emotion, rate, **(espeech or {}))
             except Exception as e:
                 print("эмоциональный голос недоступен, говорю Silero:", e, flush=True)
+        # офлайн по-английски — Kokoro, если модуль скачан: Silero и Piper русские и читают английский с акцентом
+        if lang() != "ru" and KokoroTTS.ready():
+            try:
+                return self.kokoro.synth(text, speaker, pitch, rate)
+            except Exception as e:
+                print("голос Kokoro недоступен, говорю русским офлайн-голосом:", e, flush=True)
         return self.offline.synth(text, speaker, pitch, rate)
 
 

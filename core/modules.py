@@ -139,6 +139,26 @@ def _piper():
                 install=install, remove=lambda: shutil.rmtree(PIPER, ignore_errors=True))
 
 
+def _kokoro():
+    from .voice.tts import KOKORO
+    url = "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2"   # fp32: int8 медленнее речи
+
+    def install():
+        _ensure_libs("piper", "voice-kokoro")                         # тот же sherpa-onnx, что у Piper
+        arc = KOKORO.parent / "kokoro.tar.bz2"
+        _download(url, arc, "voice-kokoro", "Kokoro")
+        _emit(id="voice-kokoro", text="распаковываю…", pct=None)
+        with tarfile.open(arc) as t:
+            t.extractall(KOKORO.parent, filter="data")
+        arc.unlink(missing_ok=True)
+
+    return dict(id="voice-kokoro", group="Голос", name="Kokoro (English)", size=305, needs="процессор, немного",
+                desc="Офлайн-голос для английского режима: живой, без интернета. Голоса af_bella, af_nicole, af_sarah, af_sky.",
+                license="Apache-2.0 (Kokoro-82M), MIT (sherpa-onnx)", source="github.com/k2-fsa/sherpa-onnx",
+                status=lambda: "installed" if (KOKORO / "voices.bin").exists() and libs_ok("piper") else "missing",
+                install=install, remove=lambda: shutil.rmtree(KOKORO, ignore_errors=True))
+
+
 def _espeech():
     """Эмоциональный голос: своё окружение Python (torch + f5-tts + ruaccent) и модель ESpeech 2,7 ГБ."""
     env = _cache / "tts-lab"
@@ -268,7 +288,7 @@ def all_modules():
         _whisper("small", 480, "Распознаёт команды. Хороший выбор для большинства ПК.", "процессор ~2 с на фразу"),
         _whisper("medium", 1500, "Точнее small на шумном микрофоне и редких словах, но втрое медленнее.",
                  "процессор ~6 с на фразу или видеокарта"),
-        _silero(), _piper(), _espeech(), _designer(), _vision(),
+        _silero(), _piper(), _kokoro(), _espeech(), _designer(), _vision(),
     ]
     for d in sorted((ROOT / "plugins").iterdir()):
         if d.is_dir() and not d.name.startswith((".", "_")) and (d / "plugin.py").exists():
