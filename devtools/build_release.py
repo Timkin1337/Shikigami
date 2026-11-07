@@ -27,7 +27,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-VERSION = "0.9.1"
+VERSION = "0.9.1.1"
 OUT = ROOT.parent / "release"
 APP = OUT / "build"                  # папка программы; установщик — в OUT/<версия>, рядом с portable и заметками
 DEV = json.loads((ROOT / "data" / "dev-paths.json").read_text(encoding="utf-8"))

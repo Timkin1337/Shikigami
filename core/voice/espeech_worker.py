@@ -8,7 +8,6 @@ F5 повторяет и тембр, и интонацию образца — п
 """
 import json, os, sys, time, types
 
-os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
 os.environ["DO_NOT_TRACK"] = "1"
 os.environ["WANDB_MODE"] = "disabled"
@@ -20,8 +19,11 @@ NFE = int(os.environ.get("ESPEECH_NFE", "24"))
 def _ascii_crfsuite():
     """pycrfsuite (ударения) открывает модель C-функцией — путь с кириллицей не открывается. Если окружение
     запущено через ASCII-ссылку, подставляем путь через неё."""
-    import pycrfsuite
-    from ruaccent.koziev.rupostagger import rupostagger as rp
+    try:
+        import pycrfsuite
+        from ruaccent.koziev.rupostagger import rupostagger as rp
+    except ImportError:
+        return
     real = os.path.realpath(sys.prefix)
 
     class Tagger(pycrfsuite.Tagger):
