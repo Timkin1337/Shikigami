@@ -288,7 +288,7 @@ def _plugin(name):
         return "off" if (d / "disabled").exists() else "installed"
 
     return dict(id=f"plugin-{name}", group="Плагины", name=title, size=0, needs="почти ничего", desc=desc,
-                license="MIT", source="в составе программы", status=status, toggle=True,
+                license="GNU AGPL-3.0", source="в составе программы", status=status, toggle=True,
                 install=lambda: (d / "disabled").unlink(missing_ok=True),
                 remove=lambda: (d / "disabled").write_text("выключен во вкладке «Модули»\n", encoding="utf-8"))
 

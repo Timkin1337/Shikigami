@@ -123,7 +123,7 @@ def electron(dst):
     run(DEV["rcedit"], exe, "--set-icon", ico, "--set-file-version", VERSION, "--set-product-version", VERSION,
         "--set-version-string", "FileDescription", "Shikigami", "--set-version-string", "ProductName", "Shikigami",
         "--set-version-string", "OriginalFilename", "Shikigami.exe", "--set-version-string", "InternalName", "Shikigami",
-        "--set-version-string", "CompanyName", "Shikigami contributors", "--set-version-string", "LegalCopyright", "MIT License")
+        "--set-version-string", "CompanyName", "Shikigami contributors", "--set-version-string", "LegalCopyright", "GNU AGPL-3.0")
     vend = dst / "shell" / "node_modules"                             # /vendor/ — three.js и three-vrm для окон
     vend.mkdir(parents=True)
     shutil.copytree(ROOT / "shell" / "node_modules" / "three", vend / "three",
@@ -159,7 +159,7 @@ def readme(dst):
         "бесплатная), а модули сами докачивают библиотеки. «Подробнее» → «Выполнить в любом случае». Исходный код открыт.\n"
         "SmartScreen and antivirus may warn: the installer is unsigned (signing certificates cost money, the program is free)\n"
         "and modules download libraries themselves. Click “More info” → “Run anyway”. The source code is open.\n\n"
-        "Лицензия кода — MIT (LICENSE). Модели, движения, голоса — под своими лицензиями (CREDITS.md):\n"
+        "Лицензия кода — GNU AGPL-3.0 (LICENSE). Модели, движения, голоса — под своими лицензиями (CREDITS.md):\n"
         "движения и голос Silero — только некоммерческое использование.\n", encoding="utf-8")
 
 

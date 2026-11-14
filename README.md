@@ -62,7 +62,7 @@ Your settings, keys and history (`config.json`, `.env`, `data/*.db`, …) stay n
 
 ## Licenses
 
-Code — [MIT](LICENSE). Motions — Bandai Namco Research Motion Dataset (CC BY-NC 4.0); Silero voices — CC BY-NC-SA 4.0:
+Code — [GNU AGPL-3.0](LICENSE) since 0.9.2 (0.9.1.1 and earlier were released under MIT). Motions — Bandai Namco Research Motion Dataset (CC BY-NC 4.0); Silero voices — CC BY-NC-SA 4.0:
 the program as a whole is free and **non-commercial**. Models: "Kitsune Maid" (Shikigami project), Seed-san (VirtualCast, Inc.),
 VRM1 Constraint Twist Sample (pixiv Inc.) — VRM Public License 1.0. Full list — [CREDITS.md](CREDITS.md).
 
@@ -86,5 +86,5 @@ SmartScreen может предупредить: «Подробнее» → «В
 **Ваш ПК — ваши правила:** ни телеметрии, ни аккаунтов, ни автообновлений. «Мозг» — бесплатный ключ NVIDIA или своя
 локальная модель. Опасное выключено по умолчанию. Голос и распознавание речи — модули по желанию.
 
-**Запуск из исходников** — как выше в «Run from source». Лицензии — MIT для кода, движения и голоса Silero —
+**Запуск из исходников** — как выше в «Run from source». Лицензии — GNU AGPL-3.0 для кода (с 0.9.2; до 0.9.1.1 — MIT), движения и голоса Silero —
 только некоммерческое использование, подробно — [CREDITS.md](CREDITS.md).

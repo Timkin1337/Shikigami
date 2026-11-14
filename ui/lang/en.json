@@ -122,7 +122,6 @@
  "Логи лежат только у вас. Хотите помочь с исправлением — скопируйте отчёт и отправьте сами, куда сочтёте нужным. Перед отправкой его можно прочитать: ключей, токенов и того, что вы говорили и писали, там нет — только технические строки.": "Logs stay only with you. Want to help fix something — copy the report and send it wherever you see fit. Before sending you can read it: no keys, tokens, or what you said and wrote — only technical strings.",
  "📂 Открыть папку с логами": "📂 Open the logs folder",
  "📋 Скопировать отчёт об ошибке": "📋 Copy error report",
- "Это свободная программа (лицензия MIT): меняйте, дорабатывайте, раздавайте. Исходный код — в папке программы.": "This is free software (MIT license): change it, improve it, share it. The source code is in the program folder.",
  "Оформление": "Appearance",
  "Тёплая, по умолчанию": "Warm, default",
  "Тёплый вечер": "Warm evening",
@@ -1979,5 +1978,7 @@
  "ставлю f5-tts и ударения…": "installing f5-tts and stress marks…",
  "скачиваю модель ESpeech (2,7 ГБ)…": "downloading the ESpeech model (2.7 GB)…",
  "ставлю qwen-tts…": "installing qwen-tts…",
- "скачиваю модель VoiceDesign (4,3 ГБ)…": "downloading the VoiceDesign model (4.3 GB)…"
+ "скачиваю модель VoiceDesign (4,3 ГБ)…": "downloading the VoiceDesign model (4.3 GB)…",
+ "Это свободная программа (лицензия GNU AGPL-3.0): меняйте, дорабатывайте, раздавайте — но свою версию тоже с открытым кодом. Исходный код — в папке программы.": "This is free software (GNU AGPL-3.0 license): change it, improve it, share it — but keep your version open source too. The source code is in the program folder.",
+ "GNU AGPL-3.0": "GNU AGPL-3.0"
 }
