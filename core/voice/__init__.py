@@ -23,6 +23,15 @@ def _tts():
     return state["tts"]
 
 
+def can_speak():
+    """Скачан ли хоть один голос (или выбран онлайн-голос Microsoft). Нет — она только пишет, и мелкие реплики
+    не пытаются синтезироваться (иначе на каждую — ошибка «синтез речи»)."""
+    from .tts import MODELS, URLS, PIPER, KokoroTTS
+    if config.get("voice.tts_engine") == "edge":
+        return True
+    return any((MODELS / f"{v}.pt").exists() for v, _ in URLS) or (PIPER / "tokens.txt").exists() or KokoroTTS.ready()
+
+
 def speech_ended(sid):
     f = _ended.pop(sid, None)
     if f and not f.done():

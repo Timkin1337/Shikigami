@@ -1262,9 +1262,33 @@ html[data-theme="tea"] .hero-name { font-style: italic; }
 .modules-group { margin: 22px 0 10px; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
 .module .mod-status { font-size: 11px; font-weight: 500; margin-left: 6px; padding: 2px 8px; border-radius: 99px; background: var(--border); color: var(--muted); vertical-align: middle; }
 .module.installed .mod-status { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--text); }
+.modules-group.sub { margin-top: 18px; font-size: 13px; }
+.modules-hint { margin: -4px 0 10px; max-width: 760px; font-size: 13px; }
+.preset-rec { font-style: normal; font-size: 11px; font-weight: 500; margin-left: 6px; padding: 2px 8px; border-radius: 99px; background: color-mix(in srgb, var(--accent) 22%, transparent); vertical-align: middle; }
+.kit-q { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.kit-q h4 { margin: 4px 0 2px; font-size: 14px; }
+.setup-step label.kit-opt, .kit-opt { display: flex; flex-direction: row; gap: 10px; align-items: flex-start; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 12px; cursor: pointer; }
+.kit-opt:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--border)); }
+.kit-opt.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
+.kit-opt input, .kit-typed input { width: 16px; height: 16px; padding: 0; margin: 3px 0 0; flex: none; accent-color: var(--accent); }
+.kit-opt > div { flex: 1; min-width: 0; }
+.kit-opt p { margin: 2px 0 4px; font-size: 13px; color: var(--muted); }
+.kit-warn { color: var(--danger); }
+.setup-step label.kit-typed, .kit-typed { display: flex; flex-direction: row; gap: 8px; align-items: center; margin: 0 0 8px; font-size: 13px; }
+.kit-total { margin: 0 0 10px; font-size: 13px; }
+#modules-presets { max-width: 760px; }
+.preset-bar { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(560px, calc(100vw - 48px)); z-index: 900;
+  padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; gap: 8px; }
+.preset-bar.hidden { display: none; }
+.preset-bar-text { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.preset-bar-text span { color: var(--muted); }
+.preset-bar-actions { display: flex; gap: 8px; }
+.preset-bar-actions.hidden { display: none; }
 .mod-meta { font-size: 12px; color: var(--muted); line-height: 1.5; }
 .mod-progress { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
-.mod-progress .bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+/* flex: none — общее .bar { flex: 1 } (плеер) в столбце сжимало полоску до нуля: хода скачивания не было видно */
+.mod-progress .bar { flex: none; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
 .mod-progress .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
 .mod-progress.indet .bar i { animation: modpulse 1.2s ease-in-out infinite; }
 @keyframes modpulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }

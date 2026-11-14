@@ -209,6 +209,11 @@
       <p>Ставьте только то, что нужно и что потянет ваш компьютер. Всё скачивается с сайтов авторов моделей напрямую
         и остаётся на этом ПК. Удалить можно в любой момент — место освободится.</p>
     </div>
+    <h3 class="modules-group">Как вы хотите общаться</h3>
+    <p class="muted modules-hint">Выберите голос и слух — нужное скачается и включится само. Не знаете, с чего начать, — начните отсюда.</p>
+    <div id="modules-presets"></div>
+    <h3 class="modules-group">Всё по отдельности</h3>
+    <p class="muted modules-hint">Для тех, кто хочет собрать сам: другой размер распознавания, запасной голос, экспериментальный голос с эмоциями, плагины.</p>
     <div id="modules-list"></div>
   </section>
 
@@ -224,7 +229,8 @@
         <ol>
           <li><b>Мозг.</b> Получите бесплатный ключ NVIDIA (ниже) или подключите локальную модель — и впишите в «Настройки → Мозг».</li>
           <li><b>Внешность.</b> Перетащите файл <code>.vrm</code> в окно «Гардероб» (где взять — ниже).</li>
-          <li><b>Голос.</b> «Настройки → Голос»: включите микрофон и скажите «{name}, привет». Или просто пишите во вкладке «Чат».</li>
+          <li><b>Голос.</b> Сразу после установки она только пишет. Чтобы говорила и слышала — «Модули» → «Как вы хотите общаться»:
+            выберите голос и «Слышит» — всё нужное скачается само. Потом скажите «{name}, привет». Или просто пишите во вкладке «Чат».</li>
         </ol>
         <p>Имя, характер и обращение к вам — «Настройки → Образ». Свой характер можно описать парой фраз и нажать «✨ Улучшить с помощью ИИ».</p>
       </details>
@@ -274,12 +280,13 @@
 
       <details class="glass"><summary>🎙 Голос и микрофон</summary>
         <ul>
+          <li><b>Она молчит или не слышит?</b> Голос не входит в установщик. «Модули» → «Как вы хотите общаться»: выберите
+            голос (основной — Silero) и, если нужно, слух. После скачивания — перезапуск.</li>
           <li>Говорите одной фразой с именем в начале: «{name}, какая погода?». Просто «{name}?» — ответит «Да?» и выслушает.</li>
           <li>Ctrl+Alt+T — прочитает вслух выделенный текст (статья, письмо, субтитры).</li>
           <li>Ctrl+Alt+Space — выслушает одну фразу без имени. Можно назначить кнопку мыши: «Настройки → Голос → Кнопка голоса».</li>
           <li>Плохо слышит — проверьте, какой микрофон выбран основным в Windows: она слушает его.</li>
-          <li>Первый запуск голоса скачивает модели распознавания (≈0,5 ГБ) — один раз.</li>
-          <li>Голос с эмоциями (радуется, грустит, ворчит) — модуль «ESpeech» во вкладке «Модули». Только русский, ~7,5 ГБ,
+          <li>Эксперимент: голос с эмоциями (радуется, грустит, ворчит) — модуль «ESpeech» во вкладке «Модули», потом «Настройки → Голос → Движок голоса». Основной голос — Silero. Только русский, ~7,5 ГБ,
             нужна видеокарта NVIDIA (~3 ГБ видеопамяти), фраза за ~2 секунды. Нет видеокарты — оставьте Silero.</li>
         </ul>
       </details>
@@ -414,7 +421,7 @@
         <label>Как работает кнопка <select name="voice.ptt_mode"><option value="hold">Держу — слушает, отпустил — выполняет</option>
           <option value="press">Нажал — следующая фраза команда</option></select></label>
         <p class="muted">Подходят клавиши и кнопки мыши: средняя, боковые «назад» и «вперёд». Работает и в играх, игра нажатие тоже получит. Имя звать не нужно.</p>
-        <label>Движок голоса <select name="voice.tts_engine"><option value="silero">Silero (на этом ПК, без интернета)</option><option value="espeech">С эмоциями (ESpeech, на этом ПК — нужен голосовой пакет)</option><option value="edge">Microsoft (онлайн, живее — текст ответов уходит в Microsoft)</option></select></label>
+        <label>Движок голоса <select name="voice.tts_engine"><option value="silero">Silero (на этом ПК, без интернета)</option><option value="espeech">С эмоциями (ESpeech, экспериментальный — нужен модуль и видеокарта)</option><option value="edge">Microsoft (онлайн, живее — текст ответов уходит в Microsoft)</option></select></label>
         <label class="only-edge">Голос Microsoft <select name="voice.edge_voice"><option value="ru-RU-SvetlanaNeural">Светлана (русский)</option>
           <option value="en-US-AvaMultilingualNeural">Ава (мягкий, лёгкий акцент)</option><option value="en-US-EmmaMultilingualNeural">Эмма (бодрый)</option>
           <option value="fr-FR-VivienneMultilingualNeural">Вивьен</option><option value="de-DE-SeraphinaMultilingualNeural">Серафина</option>
@@ -473,7 +480,8 @@
           <option value="normal">Обычно — до 8 раз в час</option><option value="chatty">Болтушка — до 20 раз в час</option></select></label>
         <p class="muted">На прямое обращение, тычки и поглаживания отвечает всегда. Срочное в игре (крипер, тонете) — в любом режиме, кроме «Молчит». ПКМ по ней → «Помолчи час».</p>
         <label class="check"><input type="checkbox" name="behavior.respect_dnd"> Молчит вслух, когда в Windows включено «Не беспокоить»</label>
-        <label class="full muted">Не чаще раза в 15 минут и молчит, пока на весь экран открыта игра или фильм.</label>
+        <label class="full muted">Сколько выбрано — столько и говорит: «Болтушка» заговаривает примерно раз в 3 минуты, «Обычно» — раз в 7–8,
+          «Минимум» — только по делу (утро, перерыв, обед). Пока на весь экран игра или фильм — молчит. Если голос не скачан, всё это — облачками.</label>
       </fieldset>
       <fieldset class="glass"><legend>Майнкрафт</legend>
         <label class="check"><input type="checkbox" name="minecraft.companion"> Заходить в мир игроком, когда он открыт для сети</label>
@@ -497,6 +505,15 @@
 </main>
 
 <div id="toasts"></div>
+<!-- ход установки набора: виден на любой вкладке, пока качается голос -->
+<div class="preset-bar glass hidden" id="preset-bar">
+  <div class="preset-bar-text"><b id="preset-bar-title"></b><span id="preset-bar-text"></span></div>
+  <div class="mod-progress"><div class="bar"><i id="preset-bar-fill"></i></div></div>
+  <div class="preset-bar-actions hidden" id="preset-bar-actions">
+    <button class="btn primary" id="preset-bar-restart">Перезапустить сейчас</button>
+    <button class="btn" id="preset-bar-close">Позже</button>
+  </div>
+</div>
 <div class="modal hidden" id="setup">
   <div class="modal-card glass setup-card">
     <div class="modal-title">Shikigami 式神 — первый запуск <span class="muted" id="setup-step-n"></span></div>
@@ -531,7 +548,12 @@
         <div class="detect-row"><button class="btn" type="button" id="setup-detect">🔍 Найти локальную модель</button>
           <span class="muted" id="setup-detect-out"></span></div>
         <label>Город для погоды <input id="setup-city" placeholder="можно пропустить"></label>
-        <p class="muted">Голос и распознавание речи — по желанию: «Модули» → скачать. Без них она работает в чате.</p>
+      </section>
+      <section class="setup-step hidden" data-step="5">
+        <h3>Голос</h3>
+        <p class="muted">В установщике только чат — голос и слух скачиваются отдельно, под ваш ПК, чтобы не занимать место тем,
+          кому они не нужны. Выберите, как хотите общаться. Поменять можно в любой момент во вкладке «Модули».</p>
+        <div id="setup-presets"></div>
       </section>
       <p class="setup-err" id="setup-err"></p>
     </div>

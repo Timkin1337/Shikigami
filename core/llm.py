@@ -161,7 +161,10 @@ async def stream_chat(name, messages, tools=None, on_text=None, on_reasoning=Non
 
     content, calls = [], {}
     # первый кусок ответа обычно приходит за секунды; 25 с тишины — модель перегружена, лучше сразу запасная
-    timeout = aiohttp.ClientTimeout(total=120, sock_read=25)
+    # Локальный сервер после простоя выгружает модель (Ollama — через 5 минут, LM Studio — по своему таймеру) и на
+    # следующий запрос сначала грузит её заново: это десятки секунд тишины, а не поломка. Ему ждём дольше.
+    local = any(h in p["base_url"] for h in ("127.0.0.1", "localhost", "[::1]"))
+    timeout = aiohttp.ClientTimeout(total=300, sock_read=180) if local else aiohttp.ClientTimeout(total=120, sock_read=25)
     async with aiohttp.ClientSession(timeout=timeout) as s:
         async with s.post(p["base_url"].rstrip("/") + "/chat/completions",
                           data=json.dumps(body, ensure_ascii=False).encode("utf-8"), headers=headers) as r:
@@ -462,7 +465,9 @@ async def chat(messages, tools=None, on_text=None, on_reasoning=None, on_switch=
     не ответила — тот же запрос обычной моделью."""
     order = [prefer] if prefer else [config.get("llm.primary"), config.get("llm.fallback")]
     errors = []
-    if model and order[0] and not provider(order[0]).get("server_exe") and _usable(model):
+    # особая модель — из каталога NVIDIA: локальному серверу (Ollama, LM Studio) её имя не шлём — он ответил бы 404
+    # или стал бы подгружать другую модель, а человек ждал бы впустую
+    if model and order[0] and "nvidia" in provider(order[0]).get("base_url", "") and _usable(model):
         try:
             t0 = time.time()
             res = await asyncio.wait_for(stream_chat(order[0], messages, tools, on_text, on_reasoning, max_tokens, temperature,

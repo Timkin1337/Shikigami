@@ -964,12 +964,90 @@ $("#lang-select").onchange = async (e) => {
 
 // ---------- модули: что поставить под свой ПК ----------
 const MOD_STATUS = { installed: "установлен", missing: "не установлен", off: "выключен", busy: "работаю…" };
+const GROUP_HINT = {
+  "Распознавание речи": "Чтобы она слышала, нужны два модуля: tiny (ловит имя) и один на выбор — small или medium (разбирает саму фразу).",
+  "Голос": "Чтобы она говорила, хватит одного голоса. Silero — русский, Kokoro — английский; остальное — по желанию.",
+};
+const mb = (n) => (n >= 1000 ? `${(n / 1000).toFixed(1)} ГБ` : `${n} МБ`);
+// «как вы хотите общаться»: два вопроса — каким голосом говорит и слышит ли. Выбор за человеком (в этом смысл
+// модулей), а ответ сам скачивает нужное и включает настройки. Та же форма — в мастере и вверху вкладки «Модули».
+function kitForm(data, sel, prefix) {
+  const meta = (o) => (o.installed ? "<span>уже скачано</span>" : o.size ? `<span>скачается</span> ~${mb(o.size)}` : "<span>ничего не скачивается</span>")
+    + (o.warn ? ` · <span class="kit-warn">${esc(o.warn)}</span>` : "");
+  const q = (key, title, opts) => `<div class="kit-q"><h4>${title}</h4>${opts.map((o) => `
+    <label class="kit-opt glass ${sel[key] === o.id ? "on" : ""}"><input type="radio" name="${prefix}-${key}" value="${o.id}" data-kit="${key}" ${sel[key] === o.id ? "checked" : ""}>
+      <div><b>${esc(o.name)}</b>${o.id !== "none" && o.id === data.current[key] ? ` <em class="preset-rec">сейчас</em>` : ""}
+        <p>${esc(o.desc)}</p><div class="mod-meta">${meta(o)}</div></div></label>`).join("")}</div>`;
+  const v = data.voices.find((o) => o.id === sel.voice), e = data.ears.find((o) => o.id === sel.ears);
+  const total = (v?.size || 0) + (e?.size || 0);
+  return q("voice", "Каким голосом она говорит?", data.voices) + q("ears", "Слышит ли она вас?", data.ears)
+    + (sel.voice !== "none" ? `<label class="check kit-typed"><input type="checkbox" data-kit="speak_typed" ${sel.speak_typed ? "checked" : ""}>
+        <span>Озвучивать и ответы в чате (иначе — вслух, только когда говорите с ней голосом)</span></label>` : "")
+    + `<p class="muted kit-total">${total ? `<span>Всего скачается</span> ~<span>${mb(total)}</span>. <span>Скачивание идёт в фоне — чатом можно пользоваться сразу.</span>`
+      : "<span>Ничего скачивать не нужно.</span>"}</p>`;
+}
+function kitSame(a, b) { return a.voice === b.voice && a.ears === b.ears && (a.voice === "none" || a.speak_typed === b.speak_typed); }
+function kitBind(el, get, render) {
+  el.onchange = (ev) => {
+    const k = ev.target.dataset.kit;
+    if (!k) return;
+    get()[k] = k === "speak_typed" ? ev.target.checked : ev.target.value;
+    render();
+  };
+}
+async function startKit(sel) {
+  const r = await api("/api/modules/kit", { method: "POST", body: sel }).catch(() => null);
+  if (!r?.ok) toast("Модули", "Сейчас уже что-то скачивается — дождитесь конца.", "error");
+  return !!r?.ok;
+}
+const kitTab = { data: null, sel: null };
+async function loadKit() {
+  kitTab.data = await api("/api/modules/kit").catch(() => null);
+  if (!kitTab.data) return;
+  const c = kitTab.data.current;
+  kitTab.sel = { voice: c.voice, ears: c.ears, speak_typed: c.voice === "none" ? true : c.speak_typed };
+  renderKitTab();
+}
+function renderKitTab() {
+  const { data, sel } = kitTab, same = kitSame(sel, data.current);
+  $("#modules-presets").innerHTML = kitForm(data, sel, "tab")
+    + `<button class="btn primary" id="kit-apply" ${same ? "disabled" : ""}>${same ? "Так и есть" : "Применить"}</button>`;
+}
+kitBind($("#modules-presets"), () => kitTab.sel, renderKitTab);
+$("#modules-presets").onclick = async (e) => {
+  const b = e.target.closest("#kit-apply");
+  if (!b) return;
+  b.disabled = true;
+  await startKit(kitTab.sel);
+};
+// полоса хода набора — на любой вкладке
+function presetProgress(m) {
+  const bar = $("#preset-bar");
+  if (m.done && m.error) { bar.classList.add("hidden"); toast("Модули", m.text, "error"); }
+  else if (m.done && !m.restart) { bar.classList.add("hidden"); toast("Готово", "Настройки голоса применены."); }
+  else {
+    bar.classList.remove("hidden");
+    $("#preset-bar-actions").classList.toggle("hidden", !m.done);
+    $("#preset-bar-title").textContent = m.done ? (m.installed ? "Скачано." : "Настройки применены.")
+      : `Скачиваю ${m.step} из ${m.steps}: ${m.name}`;
+    $("#preset-bar-text").textContent = m.done ? "Чтобы голос и микрофон заработали, программу нужно перезапустить." : (m.text || "");
+    $("#preset-bar-fill").style.width = m.done || m.pct == null ? "100%" : `${m.pct}%`;
+    bar.querySelector(".mod-progress").classList.toggle("indet", !m.done && m.pct == null);
+  }
+  if (m.done && state.page === "modules") setTimeout(loadModules, 600);
+}
+$("#preset-bar-close").onclick = () => $("#preset-bar").classList.add("hidden");
+$("#preset-bar-restart").onclick = () => {
+  if (window.shikigami?.restart) window.shikigami.restart();
+  else toast("Перезапуск", "Закройте программу: значок в трее → «Выход», и откройте снова.");
+};
 async function loadModules() {
+  loadKit();
   const mods = await api("/api/modules");
   const groups = {};
   for (const m of mods) (groups[m.group] ||= []).push(m);
-  $("#modules-list").innerHTML = Object.entries(groups).map(([g, ms]) => `<h3 class="modules-group">${esc(g)}</h3>
-    <div class="plugin-grid">${ms.map((m) => {
+  $("#modules-list").innerHTML = Object.entries(groups).map(([g, ms]) => `<h3 class="modules-group sub">${esc(g)}</h3>
+    ${GROUP_HINT[g] ? `<p class="muted modules-hint">${esc(GROUP_HINT[g])}</p>` : ""}<div class="plugin-grid">${ms.map((m) => {
       const on = m.status === "installed";
       const btn = m.status === "busy" ? `<button class="btn" disabled>…</button>`
         : m.toggle ? `<button class="btn" data-mod="${m.id}" data-act="${on ? "remove" : "install"}">${on ? "Выключить" : "Включить"}</button>`
@@ -992,6 +1070,7 @@ $("#modules-list").onclick = async (e) => {
   setTimeout(loadModules, 300);
 };
 function moduleProgress(m) {
+  if (m.id === "kit") return presetProgress(m);
   const card = document.getElementById(`mod-${m.id}`);
   if (card) {
     const p = card.querySelector(".mod-progress");
@@ -1003,22 +1082,33 @@ function moduleProgress(m) {
   if (m.done) {
     if (m.error) toast("Модуль", m.text, "error");
     else if (m.restart) toast("Модуль", "Перезапустите программу, чтобы изменение заработало.");
+    else if (/^(whisper|voice)-/.test(m.id) && m.text === "готово" && $("#preset-bar").classList.contains("hidden"))
+      toast("Модуль", "Скачано. Перезапустите программу, чтобы модуль заработал.");
     if (state.page === "modules") setTimeout(loadModules, 600);
   }
 }
 
 // ---------- мастер первого запуска: имя, характер, модель, «мозг» ----------
 // Пока он не пройден, ядро молчит само по себе, а окно аватара не показывается (shell/main.js).
-const setup = { step: 1, model: "" };
+const SETUP_STEPS = 5;
+const setup = { step: 1, model: "", kit: null };
 function setupShow(n) {
   setup.step = n;
   $$("#setup .setup-step").forEach((s) => s.classList.toggle("hidden", +s.dataset.step !== n));
-  $("#setup-step-n").textContent = `· ${n} / 4`;
+  $("#setup-step-n").textContent = `· ${n} / ${SETUP_STEPS}`;
   $("#setup-back").classList.toggle("hidden", n === 1);
-  $("#setup-next").textContent = n === 4 ? "Готово" : "Дальше";
+  $("#setup-next").textContent = n === SETUP_STEPS ? "Готово" : "Дальше";
   $("#setup-err").textContent = "";
   if (n === 3) setupModels();
+  if (n === 5) setupKit();
 }
+async function setupKit() {
+  const data = setup.kitData || (setup.kitData = await api("/api/modules/kit").catch(() => null));
+  if (!data) { $("#setup-presets").innerHTML = '<div class="muted">Список не загрузился — голос можно поставить позже во вкладке «Модули».</div>'; return; }
+  setup.kit ||= { voice: data.recommended.voice, ears: data.recommended.ears, speak_typed: true };
+  $("#setup-presets").innerHTML = kitForm(data, setup.kit, "setup");
+}
+kitBind($("#setup-presets"), () => setup.kit, setupKit);
 async function setupModels() {
   const ms = await api("/api/models").catch(() => []);
   if (!setup.model) setup.model = (ms.find((m) => m.current) || ms[0])?.name || "";
@@ -1053,7 +1143,7 @@ $("#setup-back").onclick = () => setupShow(Math.max(1, setup.step - 1));
 $("#setup-next").onclick = async () => {
   const name = $("#setup-name").value.trim();
   if (setup.step === 1 && !name) { $("#setup-err").textContent = "Придумайте ей имя — по нему она откликается."; return; }
-  if (setup.step < 4) return setupShow(setup.step + 1);
+  if (setup.step < SETUP_STEPS) return setupShow(setup.step + 1);
   const persona = $('#setup [name="setup-persona"]:checked').value, key = $("#setup-key").value.trim();
   const patch = {
     assistant_name: name, user_name: $("#setup-user").value.trim(), city: $("#setup-city").value.trim(), persona,
@@ -1069,7 +1159,9 @@ $("#setup-next").onclick = async () => {
   $("#setup").classList.add("hidden");
   window.applyName?.(name);
   greet();
-  toast("Готово", `${name} уже идёт на рабочий стол. Голос — по желанию, во вкладке «Модули».`);
+  const voiced = setup.kit && (setup.kit.voice !== "none" || setup.kit.ears !== "none") && await startKit(setup.kit);
+  toast("Готово", voiced ? `${name} уже идёт на рабочий стол. Голос скачивается — ход виден внизу окна.`
+    : `${name} уже идёт на рабочий стол. Голос — по желанию, во вкладке «Модули».`);
 };
 api("/api/config").then((c) => {
   if (c.setup_done !== false) return;

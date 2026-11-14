@@ -34,6 +34,20 @@ _last = {"t": 0, "n": 0, "kind": ""}
 AMBIENT = {"sneeze", "wake", "drop", "pickup", "pat_long"}
 
 
+async def avatar_line(text):
+    """Реплика, которую аватар сказал сам (облачко уже на экране): озвучить, если можно говорить сейчас.
+    Не чаще раза в 20 с — катание на окне и прятки сыплют фразами каждые пару секунд."""
+    from . import chatter, voice
+    from .config import config
+    now = time.time()
+    text = (text or "").strip()
+    if (not text or text == "…" or not config.get("behavior.voice", True) or voice.busy() or not voice.can_speak()
+            or now - _last.get("line", 0) < 20 or not chatter.allow()):
+        return
+    _last["line"] = now
+    await voice.speak(text, fresh_for=2)
+
+
 async def react(kind):
     if kind == "poke":
         kind = "poke_body"

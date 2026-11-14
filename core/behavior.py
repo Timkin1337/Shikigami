@@ -15,12 +15,25 @@ from .config import config, DATA
 
 STATE_FILE = DATA / "behavior.json"
 AWAY_AFTER = 5 * 60          # столько без мыши и клавиатуры — «отошёл»
-COOLDOWN = 15 * 60           # пауза между инициативными репликами
+MIN_GAP = 3 * 60             # самая короткая пауза между её собственными репликами (режим «Болтушка»)
+
+
+def cooldown():
+    """Пауза между инициативными репликами — из режима «Сколько говорит сама»: 20 в час — значит раз в 3 минуты.
+    Раньше пауза была 15 минут при любом режиме, и «Болтушка — до 20 в час» на деле давала 4–6."""
+    from .chatter import BUDGET, mode
+    n = BUDGET.get(mode(), 3)
+    return 3600 / n if n else float("inf")
 BREAK_AFTER = 2 * 3600       # столько подряд за компьютером — пора размяться
 
 
 class LASTINPUTINFO(ctypes.Structure):
     _fields_ = [("cbSize", ctypes.c_uint), ("dwTime", ctypes.c_uint)]
+
+
+def chatter_mode():
+    from .chatter import mode
+    return mode()
 
 
 def idle_seconds():
@@ -92,6 +105,12 @@ LINES = {
               ("Хмпф. Если вы прирастёте к стулу, кто будет пить мой чай? Разомнитесь.", "shy")],
     "lunch": [("Обед, господин. Голодный хозяин — позор для горничной.", "angry"),
               ("Уже второй час дня. Вы ели? Только не врите.", "neutral")],
+    # просто так: без повода, чтобы режим «Болтушка» и правда болтал
+    "idle": [("Скучно. Может, сыграем во что-нибудь?", "neutral"),
+             ("Вы так сосредоточенно смотрите в экран… Мне тоже интересно, что там.", "shy"),
+             ("Я тут подумала: если лиса — горничная, то кто убирает за лисой? Вопрос без ответа.", "happy"),
+             ("Чай будете? Ну, воображаемый. Но от души.", "happy"),
+             ("Хмпф. Хоть бы спросили, как у меня дела.", "angry")],
 }
 
 
@@ -119,15 +138,14 @@ class Director:
 
     async def say(self, text, emotion="neutral", force=False):
         now = time.time()
-        if not force and now - self.last_talk < COOLDOWN:
+        if not force and now - self.last_talk < max(MIN_GAP, cooldown()):
             return False
         if self.busy():
             return False
         self.last_talk = now
         bus.emit("avatar.state", state="idle", emotion=emotion)
-        from . import chatter
-        if config.get("behavior.voice", True) and chatter.allow():
-            from . import voice
+        from . import chatter, voice
+        if config.get("behavior.voice", True) and voice.can_speak() and chatter.allow():
             asyncio.create_task(voice.speak(text, emotion=emotion))
         else:
             bus.emit("speech", text=text, url=None, emotion=emotion)
@@ -172,6 +190,10 @@ class Director:
             if await self.say(*self.line("lunch")):
                 self.mem["lunch"] = today
                 self._save()
+            return
+        # поводов нет — просто заговаривает, сколько разрешено режимом (в «Минимуме» — нет: там только по делу)
+        if chatter_mode() in ("normal", "chatty") and time.time() - self.last_talk >= max(MIN_GAP, cooldown()):
+            await self.say(*self.line("idle"))
 
     async def morning(self, today):
         if self.busy():
@@ -290,7 +312,9 @@ def _register_lines():
         "back_long": "человек вернулся к компьютеру после долгого отсутствия (часы)",
         "night": "глубокая ночь ({time}), человек всё ещё за компьютером — пора спать",
         "break": "человек два часа не вставал из-за компьютера — пора размяться",
-        "lunch": "время обеда, напоминает поесть"})
+        "lunch": "время обеда, напоминает поесть",
+        "idle": "человек сидит за компьютером, повода нет — заговаривает сама просто так: мысль, шутка, вопрос, "
+                "предложение поиграть; коротко, одной-двумя фразами"})
     lines.register("behavior", {"birthday": BIRTHDAY, "new_year": NEW_YEAR}, {
         "birthday": "у человека сегодня день рождения ({user} — его имя), утреннее поздравление",
         "new_year": "полночь 1 января, поздравление с Новым годом"}, emo="happy")

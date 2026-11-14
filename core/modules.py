@@ -27,10 +27,17 @@ _busy = {}
 _loop = None
 
 
+_relay = {}                       # идёт набор: ход каждого модуля дублируется строкой набора {id, step, steps, name}
+
+
 def _emit(**data):
     """Ход установки — из рабочего потока в цикл ядра (bus не потокобезопасен)."""
-    if _loop:
-        bus.emit_threadsafe(_loop, "module.progress", **data)
+    if not _loop:
+        return
+    bus.emit_threadsafe(_loop, "module.progress", **data)
+    if _relay and data.get("id") != _relay["id"] and not data.get("done"):
+        bus.emit_threadsafe(_loop, "module.progress", id=_relay["id"], pct=data.get("pct"),
+                            step=_relay["step"], steps=_relay["steps"], name=_relay["name"], text=data.get("text", ""))
 
 
 def _download(url, dest, mid, label):
@@ -194,18 +201,22 @@ def _espeech():
              "from huggingface_hub import hf_hub_download as d; r='ESpeech/ESpeech-TTS-1_RL-V2';"
              "d(r,'espeech_tts_rlv2.pt'); d(r,'vocab.txt'); d('charactr/vocos-mel-24khz','config.yaml');"
              "d('charactr/vocos-mel-24khz','pytorch_model.bin')"], "скачиваю модель ESpeech (2,7 ГБ)…")
+        # экспериментальный: основным не становится сам — включается в «Настройки → Голос → Движок голоса»
 
     def remove():
+        if config.get("voice.tts_engine") == "espeech":
+            config.update({"voice": {"tts_engine": "silero"}})
         if link.exists():
             os.rmdir(link)                               # junction: удаляется сама ссылка, не содержимое
         shutil.rmtree(env, ignore_errors=True)
         shutil.rmtree(repo, ignore_errors=True)
 
-    return dict(id="voice-espeech", group="Голос", name="Голос с эмоциями (ESpeech)", size=7500,
+    return dict(id="voice-espeech", group="Голос", name="Голос с эмоциями (ESpeech) — экспериментальный", size=7500,
                 needs="видеокарта NVIDIA, ~3 ГБ видеопамяти: фраза за ~2 с (на процессоре — до минуты, не годится). "
                       "Выгружается сама после 10 мин тишины и на время игр",
-                desc="Живой голос {name}: радуется, грустит, ворчит, смущается — по настроению ответа. Только русский. "
-                     "Ставит своё окружение Python и модель ~2,7 ГБ.",
+                desc="Эксперимент: голос {name} радуется, грустит, ворчит — по настроению ответа. Только русский, тяжёлый, "
+                     "звучит не всегда ровно. Основной голос — Silero. После скачивания включается в «Настройки → Голос → "
+                     "Движок голоса».",
                 license="Apache-2.0 (ESpeech, F5-TTS)", source="huggingface.co/ESpeech",
                 status=status, install=install, remove=remove)
 
@@ -308,10 +319,162 @@ def listing():
     return out
 
 
+# ---------- набор: «как вы хотите общаться» — два вопроса вместо девяти карточек ----------
+# Голос и слух человек выбирает сам (в этом смысл модулей), но одним ответом: «каким голосом говорит» и «слышит ли».
+# Ответ — это модули И настройки к ним. Без настроек скачанный голос молчал: ответы в чате озвучиваются только
+# с voice.speak_typed, микрофон слушается только с voice.enabled, а ESpeech — только с voice.tts_engine=espeech.
+LIB_MB = {"stt": 110, "silero": 210, "piper": 40}       # примерный вес библиотек, которые модуль доставит сам
+_LIB_OF = {"whisper-tiny": "stt", "whisper-small": "stt", "whisper-medium": "stt", "voice-silero": "silero",
+           "voice-piper": "piper", "voice-kokoro": "piper"}
+
+# голос: id, модули, движок (voice.tts_engine), для какого языка интерфейса (None — любой)
+VOICES = [
+    dict(id="none", name="Не говорит — только текст", modules=[], engine=None, lang=None,
+         desc="Отвечает в чате и облачками над головой. Ничего не скачивается."),
+    dict(id="silero", name="Silero — лёгкий голос", modules=["voice-silero"], engine="silero", lang="ru",
+         desc="Работает на любом ПК, без интернета, фраза за секунду. Ровный, без эмоций."),
+    dict(id="kokoro", name="Kokoro — English voice", modules=["voice-kokoro"], engine="silero", lang="en",
+         desc="Offline, lively, any PC. English only."),
+    dict(id="edge", name="Microsoft — онлайн", modules=[], engine="edge", lang=None,
+         desc="Живой голос без скачивания, но нужен интернет, и текст её ответов уходит в Microsoft."),
+]
+EARS = [
+    dict(id="none", name="Не слышит — пишу сам", modules=[], desc="Микрофон не нужен."),
+    dict(id="small", name="Слышит (Whisper small)", modules=["whisper-tiny", "whisper-small"],
+         desc="Зовёте по имени: «{name}, какая погода?». Хватает большинству ПК, ~2 с на фразу."),
+    dict(id="medium", name="Слышит точнее (Whisper medium)", modules=["whisper-tiny", "whisper-medium"],
+         desc="Лучше на шумном микрофоне и редких словах. Без видеокарты втрое медленнее small."),
+]
+
+
+def hardware():
+    """Что известно о ПК без тяжёлых библиотек: есть ли видеокарта NVIDIA и сколько места там, куда лягут модели."""
+    p = _cache
+    while not p.exists() and p != p.parent:
+        p = p.parent
+    try:
+        free = round(shutil.disk_usage(p).free / 2 ** 30, 1)
+    except OSError:
+        free = None
+    return {"gpu": bool(shutil.which("nvidia-smi")), "free_gb": free}
+
+
+def _status_cache():
+    by_id = {m["id"]: m for m in all_modules()}
+    st = {}
+
+    def status(mid):
+        if mid not in st:
+            try:
+                st[mid] = by_id[mid]["status"]()
+            except Exception:
+                st[mid] = "missing"
+        return st[mid]
+    return by_id, status
+
+
+def _size(ids, by_id, status):
+    todo = [i for i in ids if status(i) != "installed"]
+    libs = {_LIB_OF[i] for i in todo if i in _LIB_OF and not libs_ok(_LIB_OF[i])}
+    return sum(by_id[i]["size"] for i in todo) + sum(LIB_MB[k] for k in libs)
+
+
+def current(status):
+    """Что включено сейчас — то, что человек на самом деле получит, а не что когда-то скачал."""
+    from .i18n import lang
+    eng = config.get("voice.tts_engine", "silero")
+    voice = "none"
+    if eng == "edge":
+        voice = "edge"
+    elif lang() != "ru" and status("voice-kokoro") == "installed":
+        voice = "kokoro"
+    elif status("voice-silero") == "installed":
+        voice = "silero"
+    size = config.get("voice.stt_model", "small")
+    ears = "none"
+    if config.get("voice.enabled") and status("whisper-tiny") == "installed" and status(f"whisper-{size}") == "installed":
+        ears = size if size in ("small", "medium") else "small"
+    return {"voice": voice, "ears": ears, "speak_typed": bool(config.get("voice.speak_typed"))}
+
+
+def kit():
+    from .i18n import lang
+    by_id, status = _status_cache()
+    hw = hardware()
+    lg = "ru" if lang() == "ru" else "en"
+
+    def opt(o):
+        size = _size(o["modules"], by_id, status)
+        warn = ""
+        if o.get("gpu") and not hw["gpu"]:
+            warn = "Видеокарты NVIDIA не видно — на процессоре фраза идёт до минуты."
+        elif hw["free_gb"] is not None and size and size / 1024 + 1 > hw["free_gb"]:
+            warn = f"На диске свободно {hw['free_gb']} ГБ — может не хватить."
+        return {"id": o["id"], "name": o["name"], "desc": o["desc"], "size": size, "warn": warn,
+                "installed": bool(o["modules"]) and not size}
+
+    cur = current(status)
+    voices = [opt(v) for v in VOICES if v["lang"] in (None, lg)]
+    ears = [opt(e) for e in EARS]
+    # уже что-то выбрано — показываем его; первый раз — лёгкий голос и обычный слух
+    rec = {"voice": cur["voice"] if cur["voice"] != "none" else ("silero" if lg == "ru" else "kokoro"),
+           "ears": cur["ears"] if cur["ears"] != "none" else "small"}
+    return {"voices": voices, "ears": ears, "hw": hw, "current": cur, "recommended": rec}
+
+
+def start_kit(voice, ears, speak_typed=True):
+    """Поставить выбранное: модули по очереди (uv в один Python параллельно ставить нельзя), потом настройки.
+    Ход — module.progress с id «kit»: {step, steps, name, text, pct}; в конце done и restart."""
+    v = next((x for x in VOICES if x["id"] == voice), None)
+    e = next((x for x in EARS if x["id"] == ears), None)
+    if not v or not e or _busy:                            # пока что-то ставится, второй набор не начинаем
+        return False
+    ids = list(dict.fromkeys(v["modules"] + e["modules"]))
+    by_id = {m["id"]: m for m in all_modules()}
+    patch = {"voice": {"speak_typed": bool(speak_typed) and voice != "none", "enabled": ears != "none"}}
+    # экспериментальный ESpeech включают руками в настройках; выбор «Silero» здесь его не сбрасывает (Silero и так
+    # говорит за него, пока тот прогревается или если упал)
+    if v["engine"] and not (voice == "silero" and config.get("voice.tts_engine") == "espeech"):
+        patch["voice"]["tts_engine"] = v["engine"]
+    if ears != "none":
+        patch["voice"]["stt_model"] = ears
+    was_ears = (config.get("voice.enabled"), config.get("voice.stt_model"))
+
+    def work():
+        try:
+            todo = [by_id[i] for i in ids if by_id[i]["status"]() != "installed"]
+            for n, m in enumerate(todo, 1):
+                _relay.update(id="kit", step=n, steps=len(todo), name=m["name"])
+                _emit(id=m["id"], text="начинаю…", pct=None)
+                m["install"]()
+                _emit(id=m["id"], text="готово", pct=100, done=True)
+            _relay.clear()
+            config.update(patch)
+            bus.emit_threadsafe(_loop, "config.changed")
+            # новые библиотеки (onnxruntime, torch) в уже работающее ядро не подгружаем: порядок загрузки DLL
+            # важен (см. __main__._preload), иначе падение без трассировки. Микрофон тоже запускается при старте.
+            ears_now = (patch["voice"]["enabled"], patch["voice"].get("stt_model", was_ears[1]))
+            _emit(id="kit", text="готово", pct=100, done=True, restart=bool(todo) or ears_now != was_ears,
+                  installed=len(todo))
+        except Exception as ex:
+            print(f"набор {voice}+{ears}: не удался:", ex, flush=True)
+            _emit(id="kit", text=f"не вышло: {ex}"[:300], pct=None, done=True, error=True)
+        finally:
+            _relay.clear()
+            _busy.pop("kit", None)
+
+    global _loop
+    import asyncio
+    _loop = asyncio.get_running_loop()
+    _busy["kit"] = "install"
+    threading.Thread(target=work, daemon=True).start()
+    return True
+
+
 def start(mid, action):
     """Установить/удалить в фоне. Итог — событие module.progress с done=True (и error, если не вышло)."""
     m = next((x for x in all_modules() if x["id"] == mid), None)
-    if not m or mid in _busy or action not in ("install", "remove"):
+    if not m or mid in _busy or action not in ("install", "remove") or "kit" in _busy:
         return False
 
     def work():

@@ -144,7 +144,7 @@ async function doLoadModel(force) {
   poseFrame(0);            // первая поза — уже из анимации покоя
   scene.add(vrm.scene);
   if (first) { setTimeout(() => gesture("wave", 2.4), 600); setTimeout(() => gesture("bow", 1.6), 3000); }
-  else { setEmotion("happy", 3, false); say(line("outfit"), 4500); }
+  else { setEmotion("happy", 3, false); sayLine("outfit", 4500); }
 }
 
 function frame() {
@@ -1180,7 +1180,7 @@ function startle() {
     clearTimeout(j.userData.earT);
     j.userData.earT = setTimeout(() => { j.settings.gravityPower = j.userData.earOrig.g; j.settings.stiffness = j.userData.earOrig.s; }, 2200);
   }
-  say(line(wasAsleep ? "startle_asleep" : "startle"), 2600);
+  sayLine(wasAsleep ? "startle_asleep" : "startle", 2600);
 }
 
 // сердечки над головой, пока гладят
@@ -1206,7 +1206,7 @@ function dizzyTick(dt, t) {
   } else dz.lastA = null;
   if (Math.abs(dz.acc) < Math.PI * 2 * 2.5 || t < dz.cool || st.sleeping || st.dragging) return;
   dz.acc = 0; dz.until = t + 3.4; dz.cool = t + 25;
-  say(line("dizzy"), 3600);
+  sayLine("dizzy", 3600);
   setEmotion("surprised", 3.4, false);
   send({ type: "avatar.event", kind: "dizzy" });
   for (let i = 0; i < 3; i++) {
@@ -1228,7 +1228,7 @@ function winkTick(t) {
   st.winkUntil = t + 1.8;
   if (!st.winkSaid) {
     st.winkSaid = true;
-    say(line("dozing"), 3600);
+    sayLine("dozing", 3600);
   }
 }
 
@@ -1812,7 +1812,7 @@ function tickIdle(t) {
   else if (r < 0.55) gesture("stretch", 2);
   else if (r < 0.7) gesture("nod", 1.5);
   else if (r < 0.76) sneeze(["autumn", "halloween"].includes(season()) && Math.random() < 0.5 ? "leaf" : "");
-  else if ((hour >= 23 || hour < 5) && t > (st.lateSaidAt ?? -1e9) + 1200) { st.lateSaidAt = t; say(line("late"), 4000); gesture("stretch", 2); }
+  else if ((hour >= 23 || hour < 5) && t > (st.lateSaidAt ?? -1e9) + 1200) { st.lateSaidAt = t; sayLine("late", 4000); gesture("stretch", 2); }
 }
 
 // ---------- речь и липсинк ----------
@@ -1898,7 +1898,7 @@ async function toGround() {
 }
 // в «вебке» окно стоит в углу экрана с игрой: ходить, садиться на окна и прятаться некуда — так и говорит
 function camBusy() {
-  if (st.camMode) say(line("cam_busy"), 3000);
+  if (st.camMode) sayLine("cam_busy", 3000);
   return st.camMode;
 }
 // игровой режим: прятаться совсем или стать «вебкой» в углу экрана с игрой (behavior.game_style: auto — вебка,
@@ -1926,7 +1926,7 @@ async function setGameMode(on) {
   // кадром она ставила окно по старым координатам угла — и оставалась там, где была «вебка»
   if (leavingCam) { await new Promise((r) => setTimeout(r, 250)); st.camMode = false; }
   if (!on) frame();
-  if (st.camMode) setTimeout(() => say(line("cam_hello"), 3500), 800);
+  if (st.camMode) setTimeout(() => sayLine("cam_hello", 3500), 800);
 }
 
 function say(text, ms = 6000) {
@@ -1943,6 +1943,9 @@ function showState(text) { stateEl.textContent = text || ""; stateEl.classList.t
 let LINES = {};
 const loadLines = () => fetch("/api/lines").then((r) => r.json()).then((d) => { LINES = d.lines || {}; }).catch(() => {});
 const line = (key) => pick(LINES[key]?.length ? LINES[key] : ["…"]);
+// своя реплика аватара (переоделась, закружилась, поздно уже…): облачко сразу, а голосом — если ядро разрешит
+// (режим «Сколько говорит сама», «Помолчи», не говорит ли уже). Раньше такие реплики оставались только текстом.
+function sayLine(key, ms) { const t = line(key); say(t, ms); send({ type: "avatar.say", text: t }); }
 loadLines();
 
 // ---------- связь с ядром ----------
@@ -2006,7 +2009,7 @@ function connect() {
       case "avatar.trick": trickStart(m.seconds || 40); break;
       case "avatar.home": setHome(m.on !== false); break;
       case "avatar.focus": focusState(m); break;
-      case "avatar.hide": if (!camBusy()) startPeek().then((ok) => { if (!ok) say(line("no_hiding_place"), 2500); }); break;
+      case "avatar.hide": if (!camBusy()) startPeek().then((ok) => { if (!ok) sayLine("no_hiding_place", 2500); }); break;
     }
   };
 }
@@ -2086,7 +2089,7 @@ addEventListener("mousedown", (e) => {
     return;
   }
   if (game.kind === "seek" && phys.mode === "peek") { seekFound(); return; }
-  if (game.kind === "hide") { game.caught = true; say(line("caught"), 900); return; }
+  if (game.kind === "hide") { game.caught = true; sayLine("caught", 900); return; }
   if (home.on && roomPointerDown(e)) return;
   drag = { x: e.screenX, y: e.screenY, moved: 0, zone: zoneAt(e.clientX, e.clientY) };
   // схватили мышью — слезает с окна / отпускает край / выходит из-за окна
@@ -2250,7 +2253,7 @@ function startHang(win) {
   phys.until = clock.elapsedTime + rnd(5, 10); phys.nextPoll = 0;
   frame();
   setEmotion("surprised", 3, false);
-  say(line("hang"), 2500);
+  sayLine("hang", 2500);
   placeOn(win);
 }
 async function perchOn(win, fromFall = false) {
@@ -2278,7 +2281,7 @@ async function followWindow(t) {
   if (phys.mode !== "perch" && phys.mode !== "hang") return;
   const gone = !w || w.gone || !w.visible || w.minimized || w.maximized || w.x < -10000 || w.y < -10000;
   const fall = (covered) => {                   // окно свернули, закрыли — или его заслонило другое окно
-    say(line(covered ? "window_covered" : "window_gone"), 2200);
+    sayLine(covered ? "window_covered" : "window_gone", 2200);
     setEmotion("surprised", 2, false);
     startFall();
   };
@@ -2345,14 +2348,14 @@ function rideTick(dt, t, v0) {
   if (ride.flips.length >= 3) {
     ride.flips = []; ride.nextSay = t + 7;
     setEmotion("angry", 2.5, false);
-    say(line("ride_shake"), 2400);
+    sayLine("ride_shake", 2400);
   } else if (ride.fast > 0.25) {
     ride.fast = 0; ride.nextSay = t + 6;
     setEmotion("surprised", 2, false);
-    say(line("ride_fast"), 2200);
+    sayLine("ride_fast", 2200);
   } else if (ride.moved < 0) {                               // долго ехали и встали
     ride.moved = 0;
-    if (Math.random() < 0.5) { ride.nextSay = t + 8; say(line("ride_stop"), 2200); }
+    if (Math.random() < 0.5) { ride.nextSay = t + 8; sayLine("ride_stop", 2200); }
   }
 }
 // Место, где она сидит, закрыто окном выше по z-порядку? Она всегда поверх всех, и без этой проверки
@@ -2402,7 +2405,7 @@ async function endPeek(found = false, quiet = false) {
   if (phys.mode !== "peek") return;
   phys.mode = "ground";
   await K.behind?.(0);
-  if (found && !quiet) { setEmotion("surprised", 2, false); say(line("peek_found"), 2500); }
+  if (found && !quiet) { setEmotion("surprised", 2, false); sayLine("peek_found", 2500); }
   if (clips.walk?.length) startWalk(st.win.x - phys.side * rnd(160, 260));
 }
 async function peekTick(t) {
@@ -2433,10 +2436,10 @@ function physTick(dt, t) {
     followWindow(t);
     if (phys.mode === "hang" && t > phys.until) {
       if (Math.random() < 0.55) {                         // подтянулась и села на край
-        say(line("climb"), 2500);
+        sayLine("climb", 2500);
         K.deskWindow?.(phys.hwnd).then((w) => { if (w && !w.gone && phys.mode === "hang") perchOn(w); });
       } else {
-        say(line("slip"), 2200);
+        sayLine("slip", 2200);
         startFall();
       }
       phys.until = t + 99;
@@ -2947,7 +2950,7 @@ async function goScreen(index) {
   poof();
   await new Promise((r) => setTimeout(r, 450));
   await K.toScreen(index);
-  setTimeout(() => { poof(); setEmotion("happy", 3, false); say(line("screen_moved"), 3500); }, 120);
+  setTimeout(() => { poof(); setEmotion("happy", 3, false); sayLine("screen_moved", 3500); }, 120);
 }
 
 // ---------- забавы: угощения, мячик и подушка, Хэллоуин, прятки за окнами ----------

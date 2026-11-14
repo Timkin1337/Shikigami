@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld("shikigami", {
   notify: (title, text) => ipcRenderer.send("notify", { title, text }),
   attention: () => ipcRenderer.send("attention"),
   reloadHotkeys: () => ipcRenderer.send("hotkeys:reload"),
+  restart: () => ipcRenderer.send("app:restart"),
   // аватар
   avatarHit: (hit) => ipcRenderer.send("avatar:hit", hit),
   moveAvatar: (dx, dy) => ipcRenderer.send("avatar:move", { dx, dy }),

@@ -262,6 +262,8 @@ ipcMain.on("notify", (_e, { title, text }) => {
 });
 ipcMain.on("attention", () => { if (mainWin && !mainWin.isFocused()) { showMain(); mainWin.flashFrame(true); } });
 ipcMain.on("hotkeys:reload", () => registerHotkeys());
+// перезапуск целиком (после установки голоса): ядро гасится в before-quit, новая копия поднимет его заново
+ipcMain.on("app:restart", () => { app.relaunch(); quitting = true; app.quit(); });
 
 // ---------- трей ----------
 async function buildTray(avatarOn, name = "Shikigami") {

@@ -98,6 +98,9 @@ async def handle(msg):
         asyncio.create_task(reactions.react(msg.get("kind", "")))
         from . import plugins
         asyncio.create_task(plugins.avatar_event(msg.get("kind", ""), msg))
+    elif t == "avatar.say":
+        from . import reactions
+        asyncio.create_task(reactions.avatar_line(msg.get("text", "")))
     elif t == "avatar.tint.parts":
         # окно настроек спрашивает, что у модели можно перекрасить (без parts), окно аватара отвечает (с parts)
         bus.emit("avatar.tint.parts", **{k: v for k, v in msg.items() if k != "type"})
@@ -326,6 +329,20 @@ async def friendship_get(_):
 async def modules_list(request):
     from . import modules
     return web.json_response(await asyncio.to_thread(modules.listing))
+
+
+@routes.get("/api/modules/kit")
+async def modules_kit(request):
+    from . import modules
+    return web.json_response(await asyncio.to_thread(modules.kit))
+
+
+@routes.post("/api/modules/kit")
+async def modules_kit_start(request):
+    from . import modules
+    b = await request.json()
+    ok = modules.start_kit(b.get("voice", "none"), b.get("ears", "none"), b.get("speak_typed", True))
+    return web.json_response({"ok": ok}, status=200 if ok else 409)
 
 
 @routes.post("/api/modules/{id}/{action}")

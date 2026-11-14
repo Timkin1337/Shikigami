@@ -89,6 +89,10 @@ async def describe(img, question, title="", prompt=None):
     name = config.get("vision.provider", "nvidia")
     p = llm.provider(name)
     key = config.secret(p.get("api_key_env", ""))
+    if name == "nvidia" and not key and config.get("llm.primary") == "local":
+        # ключа NVIDIA нет, «мозг» локальный (Ollama/LM Studio): смотрим той же моделью — у многих она со зрением
+        # (qwen-vl, llava, gemma). Раньше запрос уходил в NVIDIA без ключа, и зрение молча не работало.
+        name, p, key = "local", llm.provider("local"), ""
     models = [config.get("vision.model")] if config.get("vision.model") else []
     models += [m for m in FALLBACK if m not in models] if name == "nvidia" else []
     data = _jpeg(img)
@@ -98,13 +102,15 @@ async def describe(img, question, title="", prompt=None):
     content = [{"type": "text", "text": text},
                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{data}"}}]
     errors = []
-    for m in models or [p.get("model")]:
+    models = models or [p.get("model")]         # своя модель не задана — та, что у провайдера (раньше тут был IndexError)
+    for m in models:
         body = {"model": m, "max_tokens": 600, "temperature": 0.2, "messages": [{"role": "user", "content": content}]}
         if "nemotron" in m:          # иначе модель «думает» весь лимит токенов и отвечает пустотой (24.10: 2300 символов мыслей, 0 ответа)
             body["chat_template_kwargs"] = {"thinking": False}
         t0 = time.time()
         try:
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=40 if m == models[0] else 25)) as s:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(
+                    total=120 if name == "local" else 40 if m == models[0] else 25)) as s:
                 async with s.post(p["base_url"] + "/chat/completions", json=body,
                                   headers={"Authorization": f"Bearer {key}"} if key else {}) as r:
                     if r.status != 200:
