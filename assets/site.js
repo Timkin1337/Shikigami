@@ -2,7 +2,7 @@
 (function () {
   // Visit and click counter (GoatCounter: free, no cookies). Put the code from goatcounter.com here, e.g. 'shikigami'.
   // Empty = counter off, nothing is loaded.
-  var GOATCOUNTER = '';
+  var GOATCOUNTER = 'timkin';
 
   var REPO = 'Timkin1337/Shikigami';
   var L = {
