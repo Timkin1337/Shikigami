@@ -23,7 +23,7 @@ export function mountHero(box, url, { onProgress, onReady, onError } = {}) {
   const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(1.2, 2, 2.5); scene.add(key);
   const rim = new THREE.DirectionalLight(0xffb060, 1.6); rim.position.set(-2, 1.5, -1.5); scene.add(rim);
 
-  const ascii = new AsciiEffect(renderer, ' .:-=+*#%@', { invert: false, resolution: 0.16 });
+  const ascii = new AsciiEffect(renderer, ' .:-=+*#%@', { invert: false, resolution: Math.min(0.3, Math.max(0.22, 110 / W())) });
   ascii.setSize(W(), H());
   ascii.domElement.className = 'ascii';
   box.append(renderer.domElement, ascii.domElement);

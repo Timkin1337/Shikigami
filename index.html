@@ -32,11 +32,11 @@
 /* stage */
 .stage{position:relative;height:min(78vh,720px);min-height:460px}
 .stage .gl,.stage .ascii{position:absolute;inset:0;width:100%!important;height:100%!important;transition:opacity .8s}
-.stage .ascii{opacity:0;pointer-events:none;color:var(--accent);font-size:10px!important;line-height:10px!important;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.stage .ascii{opacity:0;pointer-events:none;color:var(--accent);overflow:hidden;display:flex;align-items:center;justify-content:center}
 .stage .ascii table{color:var(--accent)!important;background:transparent!important}
 .stage[data-mode=ascii] .ascii{opacity:1}
 .stage[data-mode=ascii] .gl{opacity:0}
-.stage .still{position:absolute;left:50%;bottom:0;height:96%;transform:translateX(-50%);transition:opacity .8s;animation:bob 4s ease-in-out infinite;filter:drop-shadow(0 30px 40px rgba(0,0,0,.5))}
+.stage .still{position:absolute;left:50%;bottom:0;height:96%;width:auto;max-width:none;transform:translateX(-50%);transition:opacity .8s;animation:bob 4s ease-in-out infinite;filter:drop-shadow(0 30px 40px rgba(0,0,0,.5))}
 .stage.live .still{opacity:0;pointer-events:none}
 @keyframes bob{50%{transform:translate(-50%,-10px)}}
 .stage::after{content:"";position:absolute;left:20%;right:20%;bottom:0;height:40px;background:radial-gradient(closest-side,var(--glow),transparent);pointer-events:none}
