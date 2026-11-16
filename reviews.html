@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Отзывы — Shikigami</title>
+<meta name="description" content="Что пишут игроки Shikigami и что по их отзывам исправлено. Оставьте свой отзыв.">
+<link rel="icon" href="img/favicon-256.png">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+.fix{display:grid;grid-template-columns:1fr 60px 1fr;align-items:stretch;gap:0;margin-bottom:18px}
+.fix .q{background:var(--glass);border:1px solid var(--edge);border-radius:20px 20px 4px 20px;padding:20px 22px;font-size:19px;font-style:italic;position:relative}
+.fix .q::before{content:"“";position:absolute;left:12px;top:-14px;font-size:64px;color:var(--accent);font-style:normal;line-height:1}
+.fix .q small{display:block;font-style:normal;color:var(--muted);font-size:13px;margin-top:8px}
+.fix .arr{display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:28px}
+.fix .a{background:color-mix(in srgb,var(--good) 8%,var(--surface));border:1px solid color-mix(in srgb,var(--good) 35%,var(--edge));border-radius:20px;padding:20px 22px;color:var(--muted)}
+.fix .a b{color:var(--good);display:block;font-size:13px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+@media (max-width:760px){.fix{grid-template-columns:1fr}.fix .arr{transform:rotate(90deg);height:44px}}
+.leave{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px}
+.leave a{text-decoration:none;color:var(--ink)}
+.big{font-size:clamp(60px,10vw,120px);line-height:1;font-weight:800}
+</style>
+</head>
+<body>
+<nav class="top"></nav>
+<header class="phead"><div class="wrap">
+  <span class="eyebrow ru">Отзывы</span><span class="eyebrow en">Feedback</span>
+  <h1><span class="ru">Вы написали — <span class="grad">я починил</span></span><span class="en">You wrote — <span class="grad">I fixed it</span></span></h1>
+  <p class="ru">Версия 0.9.2 целиком собрана из того, что прислали первые пользователи. Вот что спрашивали и что стало.</p>
+  <p class="en">Version 0.9.2 was built entirely from what the first users sent in. Here's what they asked and what changed.</p>
+</div></header>
+
+<section style="padding-top:20px"><div class="wrap" id="fixes"></div></section>
+
+<section><div class="wrap" style="text-align:center">
+  <div class="big grad rv">100%</div>
+  <p class="sub rv ru" style="margin:10px auto 0">отзывов прочитано. Каждый попал в план или уже в релиз.</p>
+  <p class="sub rv en" style="margin:10px auto 0">of feedback read. Every piece went into the plan or straight into a release.</p>
+</div></section>
+
+<section><div class="wrap">
+  <span class="eyebrow ru">Ваша очередь</span><span class="eyebrow en">Your turn</span>
+  <h2 class="rv ru">Оставьте отзыв</h2><h2 class="rv en">Leave feedback</h2>
+  <p class="sub rv ru">Что работает, что ломается, где непонятно куда нажать. Даже одна строчка помогает. Нашли баг — напишите модель (.vrm), «мозг» (NVIDIA / Ollama / LM Studio) и что случилось.</p>
+  <p class="sub rv en">What works, what breaks, where it's unclear what to click. Even one line helps. Found a bug? Tell me the model (.vrm), the brain (NVIDIA / Ollama / LM Studio) and what happened.</p>
+  <div class="leave">
+    <a class="card rv" href="https://t.me/shikigami_ai" data-tilt><span class="ico">✈️</span><h3>Telegram</h3><p class="ru">Комментарии под постами канала</p><p class="en">Comments under channel posts</p></a>
+    <a class="card rv" href="https://timkin-died.itch.io/shikigami" data-tilt><span class="ico">⭐</span><h3>itch.io</h3><p class="ru">Оценка и комментарий на странице</p><p class="en">A rating and a comment on the page</p></a>
+    <a class="card rv" href="https://github.com/Timkin1337/Shikigami/issues" data-tilt><span class="ico">🐞</span><h3>GitHub Issues</h3><p class="ru">Для багов с подробностями</p><p class="en">For detailed bug reports</p></a>
+    <a class="card rv" href="mailto:timkin.dev@gmail.com?subject=Shikigami" data-tilt><span class="ico">✉️</span><h3 class="ru">Почта</h3><h3 class="en">Email</h3><p>timkin.dev@gmail.com</p></a>
+  </div>
+</div></section>
+<footer></footer>
+<script src="assets/site.js"></script>
+<script>
+(function(){
+// quotes were already published by the developer in the 0.9.2 Telegram post
+var X=[
+ ['Как сделать, чтобы она говорила?','How do I make her talk?','В мастере первого запуска появился шаг «Голос»: выбираете голос — он скачивается и включается сам, без галочек в настройках.','The first-run wizard has a “Voice” step: pick a voice and it downloads and turns on by itself, no settings to hunt for.'],
+ ['Она меня не слышит, я только в чате с ней переписываюсь','She can\'t hear me, I can only text her','В том же шаге — «Слышит ли она вас?»: Whisper small или medium, с размером и нагрузкой на ПК.','Same step: “Does she hear you?” — Whisper small or medium, with size and PC load shown.'],
+ ['Половина фраз висит текстом','Half her lines just hang as text','Мелкие реплики вроде «закружилась» и «переоделась» теперь озвучиваются.','Short lines like “I\'m dizzy” or “changed my outfit” are voiced now.'],
+ ['Стоит «Болтушка — 20 раз в час», а она говорит раз пять','Chatterbox is set to 20 times an hour, but she talks maybe five','Между репликами стояла скрытая пауза 15 минут. Убрана: сколько выставили, столько и говорит.','A hidden 15-minute pause sat between lines. Gone: she talks as often as you set.'],
+ ['…после небольшого простоя опять отваливается (LM Studio)','…after a short idle it drops out again (LM Studio)','Модель долго грузилась заново, а программа сдавалась через 25 секунд. Теперь ждёт.','The model took a while to reload and the app gave up after 25 seconds. Now it waits.'],
+ ['Конечности, особенно руки, часто проходят сквозь модельку','Limbs, especially hands, often pass through the model','В работе для 0.9.3: проверка всех анимаций и починка худших.','In progress for 0.9.3: every animation gets checked and the worst ones fixed.']
+];
+function render(){var r=document.documentElement.lang=='ru';
+  document.getElementById('fixes').innerHTML=X.map(function(x,i){var done=i<5;return '<div class="fix rv in"><div class="q">'+(r?x[0]:x[1])+'<small>'+(r?'пользователь, ноябрь 2026':'a user, November 2026')+'</small></div><div class="arr">→</div><div class="a"><b>'+(done?(r?'Исправлено в 0.9.2':'Fixed in 0.9.2'):(r?'В работе':'In progress'))+'</b>'+(r?x[2]:x[3])+'</div></div>'}).join('')}
+render();document.addEventListener('langchange',render);
+})();
+</script>
+</body>
+</html>

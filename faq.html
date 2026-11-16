@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вопросы — Shikigami</title>
+<meta name="description" content="Частые вопросы о Shikigami: установка, SmartScreen, голос, модели ИИ, приватность, обновление.">
+<link rel="icon" href="img/favicon-256.png">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+.faq{display:grid;grid-template-columns:1fr 300px;gap:40px;align-items:start}
+.faq aside{position:sticky;top:90px;text-align:center}
+.faq aside img{max-height:420px}
+#search{width:100%;background:var(--glass);border:1px solid var(--edge);border-radius:14px;color:var(--ink);font:inherit;padding:14px 18px;margin-bottom:20px}
+#search:focus{outline:none;border-color:var(--accent)}
+.none{color:var(--muted);display:none}
+@media (max-width:860px){.faq{grid-template-columns:1fr}.faq aside{display:none}}
+</style>
+</head>
+<body>
+<nav class="top"></nav>
+<header class="phead"><div class="wrap">
+  <span class="eyebrow ru">Вопросы</span><span class="eyebrow en">FAQ</span>
+  <h1><span class="ru">Частые <span class="grad">вопросы</span></span><span class="en">Frequently <span class="grad">asked</span></span></h1>
+  <p class="ru">Не нашли ответ — спросите в <a href="https://t.me/shikigami_ai">Telegram</a>.</p>
+  <p class="en">Didn't find it? Ask on <a href="https://t.me/shikigami_ai">Telegram</a>.</p>
+</div></header>
+<section style="padding-top:20px"><div class="wrap faq">
+  <div><input id="search" type="search" autocomplete="off"><div id="list"></div><p class="none" id="none"></p></div>
+  <aside><img src="img/character-shy.png" alt="" loading="lazy"></aside>
+</div></section>
+<footer></footer>
+<script src="assets/site.js"></script>
+<script>
+(function(){
+var Q=[
+ ['Это правда бесплатно?','Is it really free?','Да. Ни оплаты, ни рекламы, ни подписок. Код открыт под GNU AGPL-3.0. Нужен только «мозг»: бесплатный ключ NVIDIA или своя локальная модель.','Yes. No payments, ads or subscriptions. The code is open under GNU AGPL-3.0. You only need a “brain”: a free NVIDIA key or your own local model.'],
+ ['Почему Windows и антивирус ругаются?','Why do Windows and antivirus complain?','Сборка не подписана: сертификат подписи стоит денег, а проект бесплатный. SmartScreen показывает предупреждение — нажмите «Подробнее» → «Выполнить в любом случае». Код открыт, его можно проверить или собрать самому.','The build isn\'t code-signed: a signing certificate costs money and the project is free. SmartScreen shows a warning — click “More info” → “Run anyway”. The code is open, so you can audit it or build it yourself.'],
+ ['Какой «мозг» выбрать?','Which “brain” should I pick?','Проще всего — бесплатный ключ NVIDIA: быстро и без нагрузки на ПК. Если хотите всё у себя — Ollama, LM Studio или llama.cpp: укажите адрес локального сервера в настройках. Чтобы она смотрела на экран, нужна модель со зрением.','The easiest is a free NVIDIA key: fast and light on your PC. If you want everything local — Ollama, LM Studio or llama.cpp: put the local server address in settings. For screen vision you need a model that can see images.'],
+ ['Как сделать, чтобы она говорила и слышала?','How do I make her talk and listen?','В мастере первого запуска есть шаг «Голос»: выберите голос (Silero, Microsoft) и слух (Whisper small или medium) — скачается и включится само. Поменять потом можно на вкладке «Модули» и в настройках.','The first-run wizard has a “Voice” step: pick a voice (Silero, Microsoft) and hearing (Whisper small or medium) — it downloads and turns on by itself. Change it later in the Modules tab and settings.'],
+ ['Она видит мой экран?','Can she see my screen?','Только когда вы попросите («что у меня на экране?») и только если выбранная модель умеет смотреть на картинки. Картинку можно и просто вставить в чат.','Only when you ask (“what\'s on my screen?”) and only if your model can look at images. You can also just paste a picture into chat.'],
+ ['Можно поставить свою модель?','Can I use my own model?','Да, любую VRM-модель — на вкладке «Гардероб». Многие есть на VRoid Hub. У каждой модели свои условия, они видны под названием.','Yes, any VRM model — in the Wardrobe tab. Many are on VRoid Hub. Each model has its own terms, shown under its name.'],
+ ['Что программа отправляет в интернет?','What does the app send online?','Разработчику — ничего: нет телеметрии, аккаунтов и автообновлений. В сеть уходят только ваши запросы к выбранному ИИ (если он не локальный), поиск и погода, онлайн-голос Microsoft, если вы его выбрали, и скачивание модулей.','Nothing to the developer: no telemetry, accounts or auto-updates. Only your requests to the AI you picked (if it isn\'t local), web searches and weather, the Microsoft online voice if you chose it, and module downloads go online.'],
+ ['Опасно ли давать ей управлять ПК?','Is it risky to let her control my PC?','Опасные инструменты — PowerShell, удаление файлов, выключение — выключены по умолчанию. Если включите, каждое действие она подтверждает у вас. Погасить или заблокировать экран она всегда спрашивает.','Risky tools — PowerShell, deleting files, shutdown — are off by default. If you enable them, she asks you before each action. She always asks before locking or turning off the screen.'],
+ ['Как обновиться?','How do I update?','Запустите новый установщик поверх старого — настройки, переписка и модели останутся. Через приложение itch.io обновится само.','Run the new installer over the old one — settings, chats and models stay. Through the itch.io app it updates by itself.'],
+ ['Есть версия для Mac или Android?','Is there a Mac or Android version?','Пока только Windows 10/11. macOS — после 1.0. Для телефона есть свой Telegram-бот: пишете ей с телефона, она делает на ПК.','Windows 10/11 only for now. macOS comes after 1.0. For your phone there\'s your own Telegram bot: text her and she acts on your PC.'],
+ ['Нашёл баг. Куда писать?','Found a bug. Where do I report it?','В <a href="https://github.com/Timkin1337/Shikigami/issues">GitHub Issues</a>, <a href="https://t.me/shikigami_ai">Telegram</a> или на почту timkin.dev@gmail.com. Укажите модель (.vrm), «мозг» и что случилось. В 0.9.3 появится отчёт в один клик.','On <a href="https://github.com/Timkin1337/Shikigami/issues">GitHub Issues</a>, <a href="https://t.me/shikigami_ai">Telegram</a> or timkin.dev@gmail.com. Mention the model (.vrm), the brain and what happened. Version 0.9.3 adds a one-click report.'],
+ ['Как помочь проекту?','How can I help?','Напишите отзыв, поставьте звезду на GitHub, расскажите друзьям. Если делаете анимации для VRM — поделитесь движением в .vrma или гуманоидном .fbx под CC0 или CC BY: ваше имя будет в авторах.','Leave feedback, star it on GitHub, tell friends. If you make VRM animations, share a move as .vrma or humanoid .fbx under CC0 or CC BY — you\'ll be credited.'],
+ ['Можно использовать в коммерческих целях?','Can I use it commercially?','Код — под GNU AGPL-3.0: менять и распространять можно, но свою версию нужно тоже открыть. Модель по умолчанию, движения и голоса Silero — только некоммерческое использование. Подробно — в <a href="https://github.com/Timkin1337/Shikigami/blob/main/CREDITS.md">CREDITS.md</a>.','The code is GNU AGPL-3.0: you may change and share it, but your version must be open too. The default model, motions and Silero voices are non-commercial only. Details in <a href="https://github.com/Timkin1337/Shikigami/blob/main/CREDITS.md">CREDITS.md</a>.']
+];
+function render(){var r=document.documentElement.lang=='ru',L=r?0:1;
+  document.getElementById('search').placeholder=r?'Поиск по вопросам…':'Search questions…';
+  document.getElementById('none').textContent=r?'Ничего не нашлось. Спросите в Telegram!':'Nothing found. Ask on Telegram!';
+  document.getElementById('list').innerHTML=Q.map(function(q,i){return '<details class="q"'+(i==0?' open':'')+'><summary>'+q[L]+'</summary><div>'+q[2+L]+'</div></details>'}).join('');
+  document.querySelectorAll('details.q').forEach(function(d){d.addEventListener('toggle',function(){if(d.open)track('faq-'+Array.prototype.indexOf.call(d.parentNode.children,d))})});
+  filter()}
+function filter(){var v=document.getElementById('search').value.toLowerCase().trim(),n=0;
+  document.querySelectorAll('details.q').forEach(function(d){var ok=!v||d.textContent.toLowerCase().indexOf(v)>=0;d.hidden=!ok;if(ok)n++;if(v&&ok)d.open=true});
+  document.getElementById('none').style.display=n?'none':'block'}
+document.getElementById('search').addEventListener('input',filter);
+render();document.addEventListener('langchange',render);
+})();
+</script>
+</body>
+</html>

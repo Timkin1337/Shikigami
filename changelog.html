@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Версии — Shikigami</title>
+<meta name="description" content="История версий Shikigami: что нового в каждом выпуске.">
+<link rel="icon" href="img/favicon-256.png">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+.rel{display:grid;grid-template-columns:180px 1fr;gap:30px;padding:34px 0;border-top:1px solid var(--edge)}
+.rel .v{position:sticky;top:90px;align-self:start}
+.rel .v b{display:block;font-size:44px;line-height:1;letter-spacing:-.03em}
+.rel .v time{color:var(--muted);font-size:14px}
+.rel .v .pill{display:inline-block;margin-top:8px;font-size:12px;border-radius:99px;padding:2px 10px;border:1px solid var(--accent);color:var(--accent)}
+.rel h3{font-size:24px;margin:0 0 10px}
+.rel ul{margin:0;padding-left:20px;color:var(--muted)}
+.rel li{margin:7px 0}
+.rel li b{color:var(--ink);font-weight:600}
+.rel video{width:100%;max-width:640px;border-radius:16px;border:1px solid var(--edge);margin-top:18px}
+.rel.next{opacity:.85}
+.rel.next b{color:var(--muted)}
+@media (max-width:700px){.rel{grid-template-columns:1fr;gap:10px}.rel .v{position:static}}
+</style>
+</head>
+<body>
+<nav class="top"></nav>
+<header class="phead"><div class="wrap">
+  <span class="eyebrow ru">Журнал версий</span><span class="eyebrow en">Changelog</span>
+  <h1><span class="ru">Как она <span class="grad">росла</span></span><span class="en">How she <span class="grad">grew</span></span></h1>
+  <p class="ru">От первой строчки до публичной беты — десять дней. Дальше — обновления по вашим отзывам. Полные девлоги — на <a href="https://timkin-died.itch.io/shikigami/devlog">itch.io</a>.</p>
+  <p class="en">Ten days from the first line to the public beta. After that, updates driven by your feedback. Full devlogs on <a href="https://timkin-died.itch.io/shikigami/devlog">itch.io</a>.</p>
+</div></header>
+
+<section style="padding-top:20px"><div class="wrap">
+  <div class="rel next rv">
+    <div class="v"><b>0.9.3</b><span class="pill ru">в работе</span><span class="pill en">in progress</span></div>
+    <div><h3 class="ru">Отчёт об ошибке в один клик</h3><h3 class="en">One-click bug report</h3>
+      <ul class="ru"><li><b>«Собрать отчёт»</b> — логи и сведения о системе без личного, сразу разработчику.</li><li><b>Анимации</b> — проверка всех движений: руки больше не должны проходить сквозь тело.</li></ul>
+      <ul class="en"><li><b>“Collect report”</b> — logs and system info, nothing personal, straight to the developer.</li><li><b>Animations</b> — every move checked: no more hands passing through the body.</li></ul></div>
+  </div>
+
+  <div class="rel rv">
+    <div class="v"><b class="grad">0.9.2</b><time>14.11.2026</time></div>
+    <div><h3 class="ru">Голос выбирается при первом запуске</h3><h3 class="en">Pick her voice on first launch</h3>
+      <ul class="ru">
+        <li><b>Шаг «Голос» в мастере</b>: каким голосом говорит (Silero, Microsoft или никаким) и слышит ли вас (Whisper small / medium). Выбрали — скачалось и включилось само.</li>
+        <li><b>«Болтушка» болтает</b> столько, сколько выставлено: раньше мешала скрытая пауза в 15 минут.</li>
+        <li><b>Мелкие фразы озвучиваются</b>, а не висят немыми облачками.</li>
+        <li><b>Локальные модели</b> (LM Studio, Ollama) не отваливаются после простоя. «Посмотри на экран» работает с локальной моделью со зрением.</li>
+        <li><b>Лицензия кода — GNU AGPL-3.0</b>: бесплатно и открыто, но закрыть код и продавать уже нельзя.</li>
+      </ul>
+      <ul class="en">
+        <li><b>A “Voice” step in the wizard</b>: how she speaks (Silero, Microsoft or not at all) and whether she hears you (Whisper small / medium). Pick it — it downloads and turns on by itself.</li>
+        <li><b>Chatterbox really chats</b> as often as you set: a hidden 15-minute pause was in the way.</li>
+        <li><b>Short lines are voiced</b> instead of hanging as silent bubbles.</li>
+        <li><b>Local models</b> (LM Studio, Ollama) no longer drop out after idling. “Look at my screen” works with a local vision model.</li>
+        <li><b>Code license is now GNU AGPL-3.0</b>: still free and open, but no one can close it and sell it.</li>
+      </ul>
+      <video src="img/cover-0.9.2.mp4" autoplay muted loop playsinline aria-label="Shikigami 0.9.2"></video></div>
+  </div>
+
+  <div class="rel rv">
+    <div class="v"><b>0.9.1.1</b><time>07.11.2026</time></div>
+    <div><h3 class="ru">Починка голоса с эмоциями</h3><h3 class="en">Emotional voice fix</h3>
+      <ul class="ru"><li>Модуль ESpeech снова запускается.</li></ul><ul class="en"><li>The ESpeech module starts again.</li></ul></div>
+  </div>
+
+  <div class="rel rv">
+    <div class="v"><b>0.9.1</b><time>03.11.2026</time></div>
+    <div><h3 class="ru">Теперь слышно, что она услышала</h3><h3 class="en">She lets you know she heard you</h3>
+      <ul class="ru"><li><b>Звоночек «слушаю»</b>, когда зовёте её по имени.</li><li><b>Живее движения</b>: дышит плечами, жесты каждый раз чуть разные.</li><li><b>Мод «Глаза» для Minecraft</b> в комплекте: видит здоровье, голод, мобов рядом.</li><li><b>Kokoro</b> — офлайн-голос для английского.</li></ul>
+      <ul class="en"><li><b>A “listening” chime</b> when you call her name.</li><li><b>Livelier motion</b>: breathing shoulders, gestures vary each time.</li><li><b>The “Eyes” Minecraft mod</b> ships with it: health, hunger, mobs nearby.</li><li><b>Kokoro</b> — an offline English voice.</li></ul></div>
+  </div>
+
+  <div class="rel rv">
+    <div class="v"><b>0.9.0</b><time>25.10.2026</time></div>
+    <div><h3 class="ru">Первая публичная бета</h3><h3 class="en">First public beta</h3>
+      <ul class="ru"><li><b>Мастер первого запуска</b>: имя, характер, модель, «мозг».</li><li><b>Агент в два шага</b>: сначала дело, потом ответ в характере — модель больше не выдумывает.</li><li><b>Жизнь на столе</b>: едет на окне, прячется, вздрагивает от грохота, «вебка» поверх игр, дыхание 4-7-8.</li><li><b>Дружба</b>, банк фраз под ваш характер, английский интерфейс.</li><li><b>Установщик</b> без прав администратора, проверенный в Windows Sandbox.</li></ul>
+      <ul class="en"><li><b>First-run wizard</b>: name, personality, model, brain.</li><li><b>A two-step agent</b>: do the job first, then answer in character — no more made-up facts.</li><li><b>Desktop life</b>: rides windows, hides, startles at loud noises, a webcam corner over games, 4-7-8 breathing.</li><li><b>Friendship</b>, a phrase bank tuned to your personality, English UI.</li><li><b>An installer</b> without admin rights, tested in Windows Sandbox.</li></ul></div>
+  </div>
+</div></section>
+<footer></footer>
+<script src="assets/site.js"></script>
+</body>
+</html>

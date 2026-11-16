@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Возможности — Shikigami</title>
+<meta name="description" content="Что умеет Shikigami: голос, 88 инструментов, жизнь на рабочем столе, игры, Telegram, плагины, свои команды.">
+<link rel="icon" href="img/favicon-256.png">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px}
+.filters button{background:var(--glass);border:1px solid var(--edge);color:var(--muted);border-radius:99px;padding:8px 16px;font:inherit;cursor:pointer;transition:.2s}
+.filters button.on{background:var(--accent);border-color:var(--accent);color:#160c04;font-weight:600}
+.feat .card{transition:transform .25s,border-color .25s,box-shadow .25s,opacity .3s}
+.feat .card.hide{display:none}
+.feat .tag{display:inline-block;font-size:12px;color:var(--accent);border:1px solid var(--edge);border-radius:99px;padding:1px 9px;margin-top:12px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+.split.rev>:first-child{order:2}
+.split img,.split video{width:100%;border-radius:18px;border:1px solid var(--edge);box-shadow:0 40px 80px -40px var(--accent)}
+.split ul{color:var(--muted);padding-left:20px}
+.split li{margin:6px 0}
+@media (max-width:860px){.split{grid-template-columns:1fr}.split.rev>:first-child{order:0}}
+.gallery{columns:3 300px;column-gap:14px}
+.gallery img{width:100%;margin-bottom:14px;border-radius:14px;border:1px solid var(--edge);break-inside:avoid;display:block}
+</style>
+</head>
+<body>
+<nav class="top"></nav>
+
+<header class="phead"><div class="wrap">
+  <span class="eyebrow ru">Возможности</span><span class="eyebrow en">Features</span>
+  <h1><span class="ru">Всё, что <span class="grad">она умеет</span></span><span class="en">Everything <span class="grad">she can do</span></span></h1>
+  <p class="ru">Фильтруйте по темам или листайте всё подряд. Почти всё работает и голосом, и в чате.</p>
+  <p class="en">Filter by topic or scroll through everything. Almost all of it works by voice and in chat.</p>
+</div></header>
+
+<section style="padding-top:20px"><div class="wrap">
+  <div class="filters" id="filters"></div>
+  <div class="grid feat" id="feat"></div>
+</div></section>
+
+<section><div class="wrap split">
+  <div>
+    <span class="eyebrow ru">Голос</span><span class="eyebrow en">Voice</span>
+    <h2 class="rv ru">Позовите по имени</h2><h2 class="rv en">Call her by name</h2>
+    <ul class="ru rv"><li>Имя слышит из другого конца комнаты, отвечает звоночком «слушаю».</li><li>Голос: Silero (лёгкий, без интернета), Microsoft (онлайн) или Kokoro для английского.</li><li>Слух: Whisper small или medium — на вашем ПК.</li><li>Губы двигаются в такт, эмоция ответа видна на лице.</li><li>Всё выбирается в мастере первого запуска и ставится само.</li></ul>
+    <ul class="en rv"><li>Hears her name across the room and chimes “listening”.</li><li>Voice: Silero (light, offline), Microsoft (online) or Kokoro for English.</li><li>Hearing: Whisper small or medium, on your PC.</li><li>Lip-sync and emotions on her face.</li><li>Picked in the first-run wizard, installs itself.</li></ul>
+  </div>
+  <video class="rv" src="img/yuki-0.9.2.mp4" autoplay muted loop playsinline aria-label="Shikigami"></video>
+</div></section>
+
+<section><div class="wrap split rev">
+  <div>
+    <span class="eyebrow ru">Свои правила</span><span class="eyebrow en">Your own rules</span>
+    <h2 class="rv ru">Команды без кода</h2><h2 class="rv en">Commands without code</h2>
+    <ul class="ru rv"><li>Редактор «триггер → условие → действие»: фраза, время, запуск программы, простой.</li><li>Цепочки: «Доброе утро» — погода, дела на сегодня, любимый плейлист.</li><li>Сценарии можно делать голосом или мышкой.</li></ul>
+    <ul class="en rv"><li>A “trigger → condition → action” editor: a phrase, a time, an app launch, idle.</li><li>Chains: “Good morning” → weather, today's to-dos, your playlist.</li><li>Build them by voice or with the mouse.</li></ul>
+  </div>
+  <img class="zoom rv" src="img/ru-6-commands.png" alt="Редактор команд" loading="lazy">
+</div></section>
+
+<section><div class="wrap split">
+  <div>
+    <span class="eyebrow ru">Модули</span><span class="eyebrow en">Modules</span>
+    <h2 class="rv ru">Ставьте только нужное</h2><h2 class="rv en">Install only what you need</h2>
+    <ul class="ru rv"><li>Установщик лёгкий: голос, слух и тяжёлые штуки — отдельными модулями.</li><li>У каждого видно размер и нагрузку на ПК.</li><li>Скачиваются с сайтов авторов моделей.</li></ul>
+    <ul class="en rv"><li>A light installer: voice, hearing and heavy stuff come as modules.</li><li>Each shows its size and load on your PC.</li><li>Downloaded from the model authors' sites.</li></ul>
+  </div>
+  <img class="zoom rv ru" src="img/ru-4-modules.png" alt="Модули" loading="lazy"><img class="zoom rv en" src="img/en-4-modules.png" alt="Modules" loading="lazy">
+</div></section>
+
+<section><div class="wrap">
+  <span class="eyebrow ru">Галерея</span><span class="eyebrow en">Gallery</span>
+  <h2 class="rv ru">Скриншоты из программы</h2><h2 class="rv en">Screenshots from the app</h2>
+  <p class="sub ru">Нажмите, чтобы увеличить.</p><p class="sub en">Click to enlarge.</p>
+  <div class="gallery" id="gallery"></div>
+</div></section>
+
+<section><div class="wrap" style="text-align:center">
+  <h2 class="rv ru">Понравилось?</h2><h2 class="rv en">Like it?</h2>
+  <div class="btns" style="justify-content:center;margin-top:20px"><a class="btn" href="https://github.com/Timkin1337/Shikigami/releases/latest"><span class="ru">Скачать бесплатно</span><span class="en">Download for free</span></a><a class="btn ghost" href="about.html"><span class="ru">Как устроено</span><span class="en">How it works</span></a></div>
+</div></section>
+
+<footer></footer>
+<script src="assets/site.js"></script>
+<script>
+(function(){
+var ru=function(){return document.documentElement.lang=='ru'};
+var CAT={all:['Все','All'],talk:['Общение','Talk'],help:['Помощь','Help'],desk:['Рабочий стол','Desktop'],play:['Игры','Play'],ext:['Расширения','Extend']};
+var F=[
+ ['talk','🗣','Голос и чат','Voice and chat','Зовите по имени или зажмите клавишу — она ответит голосом. Или просто пишите.','Call her name or hold a key and she answers out loud. Or just type.'],
+ ['talk','🎭','Свой характер','Your personality','Имя, характер и обращение задаёте сами: от вежливой помощницы до колючей цундэрэ.','You set her name, personality and how she addresses you — polite helper to prickly tsundere.'],
+ ['talk','💞','Дружба','Friendship','Уровень дружбы растёт от общения и меняет тон её реплик.','A friendship level grows as you talk and changes her tone.'],
+ ['talk','🧠','Память','Memory','Помнит факты о вас, заметки и прошлые разговоры — в локальной базе на вашем ПК.','Remembers facts, notes and past chats — in a local database on your PC.'],
+ ['help','🚀','Программы и сайты','Apps and sites','«Открой Steam», «найди рецепт борща» — открывает, ищет, читает страницы.','“Open Steam”, “find a recipe” — opens, searches, reads pages.'],
+ ['help','⏰','Напоминания и таймеры','Reminders and timers','Напомнит размяться, выпить воды или о встрече. Может продублировать на телефон.','Reminds you to stretch, drink water or about a meeting. Can ping your phone too.'],
+ ['help','📝','Заметки и дела','Notes and to-dos','Списки дел, заметки, покупки — на вкладке «Дела» и голосом.','To-dos, notes, shopping lists — in the To-do tab and by voice.'],
+ ['help','🎵','Музыка и громкость','Music and volume','Пауза, следующий трек, громкость. Знает, что сейчас играет.','Pause, next track, volume. Knows what\'s playing.'],
+ ['help','👁','Смотрит на экран','Looks at the screen','«Что у меня на экране?» — опишет, прочитает текст, поможет с ошибкой. Картинки можно вставить в чат.','“What\'s on my screen?” — describes it, reads text, helps with an error. Paste pictures into chat.'],
+ ['help','📁','Файлы','Files','Найдёт файл по описанию и откроет нужную папку.','Finds a file by description and opens the right folder.'],
+ ['desk','🪟','Едет на окне','Rides your windows','Садится на заголовок окна и катается, когда вы его двигаете.','Sits on a window title bar and rides along when you drag it.'],
+ ['desk','🙈','Прячется','Hides','Уходит за окна, выглядывает и сама находит себе занятие от скуки.','Slips behind windows, peeks out, and finds things to do when bored.'],
+ ['desk','🌦','Погода и сезоны','Weather and seasons','Переодевается по погоде, празднует праздники, ночью клюёт носом.','Dresses for the weather, celebrates holidays, nods off at night.'],
+ ['desk','🫁','Дыхание 4-7-8','4-7-8 breathing','Подышит вместе с вами, когда надо успокоиться.','Breathes with you when you need to calm down.'],
+ ['desk','📷','«Вебка» в играх','Webcam corner','В полноэкранной игре — маленький квадрат с ней в углу экрана.','In fullscreen games she shrinks into a little corner window.'],
+ ['desk','👗','Гардероб','Wardrobe','Любая модель VRM, перекраска одежды, фоторежим.','Any VRM model, outfit recolouring, photo mode.'],
+ ['play','♟','Шахматы','Chess','Играет и комментирует ходы в своём характере.','Plays and comments on your moves in character.'],
+ ['play','🎲','Мини-игры','Mini-games','Крестики-нолики, камень-ножницы-бумага, «20 вопросов».','Tic-tac-toe, rock-paper-scissors, 20 questions.'],
+ ['play','⛏','Майнкрафт','Minecraft','Компаньон в игре, а с модом «Глаза» видит здоровье, мобов и предупредит о крипере.','An in-game buddy; with the “Eyes” mod she sees health, mobs and warns about creepers.'],
+ ['play','🍅','Фокус','Focus','Таймер помодоро: она следит, чтобы вы работали и отдыхали.','A pomodoro timer: she makes sure you work and rest.'],
+ ['ext','📱','Telegram-бот','Telegram bot','Свой бот: пишете с телефона — она делает на ПК, присылает файлы и снимки экрана.','Your own bot: text from your phone, she acts on the PC, sends files and screenshots.'],
+ ['ext','🧩','Плагины','Plugins','Папка с plugin.py и panel.html — новые инструменты и своя вкладка.','A folder with plugin.py and panel.html adds tools and a tab.'],
+ ['ext','⚙','Свои команды','Custom commands','Редактор «триггер → условие → действие» без программирования.','A “trigger → condition → action” editor, no coding.'],
+ ['ext','🔌','OpenAI-совместимый адрес','OpenAI-compatible API','Другие программы могут говорить с ней как с обычной LLM — с характером и памятью.','Other apps can talk to her like a regular LLM — with personality and memory.']
+];
+var cur='all';
+function render(){
+  var L=ru()?0:1;
+  document.getElementById('filters').innerHTML=Object.keys(CAT).map(function(k){return '<button data-c="'+k+'"'+(k==cur?' class="on"':'')+'>'+CAT[k][L]+'</button>'}).join('');
+  document.querySelectorAll('#filters button').forEach(function(b){b.onclick=function(){cur=b.dataset.c;render();track('filter-'+cur)}});
+  document.getElementById('feat').innerHTML=F.map(function(f){return '<div class="card'+(cur=='all'||f[0]==cur?'':' hide')+'"><span class="ico">'+f[1]+'</span><h3>'+f[2+L]+'</h3><p>'+f[4+L]+'</p><span class="tag">'+CAT[f[0]][L]+'</span></div>'}).join('');
+  var G=['1-chat-and-companion','2-home','3-wardrobe','4-modules','5-chess'],l=ru()?'ru':'en';
+  document.getElementById('gallery').innerHTML=G.map(function(g){return '<img class="zoom" src="img/'+l+'-'+g+'.png" alt="'+g.replace(/^\d-/,'').replace(/-/g,' ')+'" loading="lazy">'}).join('')+
+    '<img class="zoom" src="img/ru-6-commands.png" alt="commands" loading="lazy"><img class="zoom" src="img/ru-7-settings.png" alt="settings" loading="lazy">';
+}
+render();document.addEventListener('langchange',render);
+})();
+</script>
+</body>
+</html>

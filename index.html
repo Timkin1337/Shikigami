@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shikigami 式神 — ИИ-компаньон для рабочего стола Windows</title>
+<meta name="description" content="Shikigami — бесплатный ИИ-компаньон с открытым кодом для Windows: 3D-персонаж на рабочем столе, голос, помощь по ПК, игры. Без телеметрии.">
+<meta property="og:title" content="Shikigami 式神">
+<meta property="og:description" content="AI companion on your Windows desktop. Free, open source, no telemetry.">
+<meta property="og:image" content="https://timkin1337.github.io/Shikigami/img/social-1200x630.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0e0b09">
+<link rel="icon" href="img/favicon-256.png">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+/* hero */
+.hero{position:relative;min-height:calc(100vh - 60px);display:flex;align-items:center;overflow:hidden;padding:30px 0}
+.hero .wrap{display:grid;grid-template-columns:1.1fr 1fr;align-items:center;gap:10px;width:100%}
+#embers{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.kanji{position:absolute;right:-4vw;top:50%;transform:translateY(-50%);font-size:min(46vw,620px);line-height:1;font-weight:900;color:transparent;-webkit-text-stroke:1px color-mix(in srgb,var(--accent) 22%,transparent);pointer-events:none;user-select:none;writing-mode:vertical-rl;animation:breathe 8s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.5}}
+.badge{display:inline-flex;align-items:center;gap:8px;background:var(--glass);border:1px solid var(--edge);border-radius:99px;padding:6px 14px 6px 8px;font-size:14px;color:var(--muted);margin-bottom:22px;text-decoration:none}
+.badge b{background:var(--accent);color:#160c04;border-radius:99px;padding:1px 8px;font-size:12px}
+.badge:hover{border-color:var(--accent)}
+.hero h1{font-size:clamp(52px,9vw,112px);line-height:.95;margin:0 0 20px;letter-spacing:-.04em}
+.hero h1 small{display:block;font-size:.42em;letter-spacing:0;margin-top:10px;font-weight:600}
+.lead{font-size:clamp(19px,2.2vw,23px);margin:0 0 30px;max-width:560px;color:color-mix(in srgb,var(--ink) 88%,var(--muted))}
+.typed{color:var(--accent3);border-right:2px solid var(--accent);padding-right:3px;animation:caret 1s steps(1) infinite}
+@keyframes caret{50%{border-color:transparent}}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;color:var(--muted);font-size:14px}
+.meta span::before{content:"✓ ";color:var(--good)}
+/* stage */
+.stage{position:relative;height:min(78vh,720px);min-height:460px}
+.stage .gl,.stage .ascii{position:absolute;inset:0;width:100%!important;height:100%!important;transition:opacity .8s}
+.stage .ascii{opacity:0;pointer-events:none;color:var(--accent);font-size:10px!important;line-height:10px!important;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.stage .ascii table{color:var(--accent)!important;background:transparent!important}
+.stage[data-mode=ascii] .ascii{opacity:1}
+.stage[data-mode=ascii] .gl{opacity:0}
+.stage .still{position:absolute;left:50%;bottom:0;height:96%;transform:translateX(-50%);transition:opacity .8s;animation:bob 4s ease-in-out infinite;filter:drop-shadow(0 30px 40px rgba(0,0,0,.5))}
+.stage.live .still{opacity:0;pointer-events:none}
+@keyframes bob{50%{transform:translate(-50%,-10px)}}
+.stage::after{content:"";position:absolute;left:20%;right:20%;bottom:0;height:40px;background:radial-gradient(closest-side,var(--glow),transparent);pointer-events:none}
+.ctrl{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);display:flex;gap:6px;z-index:3;background:var(--glass);border:1px solid var(--edge);border-radius:14px;padding:5px;backdrop-filter:blur(8px)}
+.ctrl button{background:none;border:0;color:var(--muted);font:inherit;font-size:14px;padding:6px 11px;border-radius:10px;cursor:pointer;white-space:nowrap}
+.ctrl button.on,.ctrl button:hover{background:var(--edge);color:var(--ink)}
+.bubble{position:absolute;left:50%;top:6%;transform:translate(-10%,10px) scale(.9);opacity:0;background:var(--ink);color:#1a120c;padding:10px 16px;border-radius:18px 18px 18px 4px;font-weight:600;max-width:260px;transition:.35s cubic-bezier(.2,1.4,.4,1);pointer-events:none;z-index:3;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.bubble.show{opacity:1;transform:translate(-10%,0) scale(1)}
+.loadbar{position:absolute;left:25%;right:25%;top:50%;height:4px;border-radius:4px;background:var(--edge);overflow:hidden;z-index:2;display:none}
+.loadbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .2s}
+.stage.loading .loadbar{display:block}
+.hint{position:absolute;right:0;top:12%;color:var(--muted);font-size:13px;writing-mode:vertical-rl;opacity:.7}
+@media (max-width:860px){
+  .hero{min-height:0}
+  .hero .wrap{grid-template-columns:1fr}
+  .stage{height:520px;min-height:0}
+  .hint{display:none}
+}
+/* chat demo */
+.chat{display:grid;grid-template-columns:1fr 1.2fr;gap:30px;align-items:start}
+.win{background:var(--surface);border:1px solid var(--edge);border-radius:20px;overflow:hidden;box-shadow:0 40px 80px -40px #000}
+.win .bar{display:flex;align-items:center;gap:7px;padding:12px 16px;border-bottom:1px solid var(--edge);color:var(--muted);font-size:14px}
+.win .bar i{width:11px;height:11px;border-radius:50%;background:var(--edge)}
+.win .bar i:first-child{background:#ff5f57}.win .bar i:nth-child(2){background:#febc2e}.win .bar i:nth-child(3){background:#28c840}
+.win .bar span{margin-left:8px}
+.log{height:360px;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.msg{max-width:82%;padding:10px 14px;border-radius:16px;animation:pop .35s ease-out}
+.msg.me{align-self:flex-end;background:color-mix(in srgb,var(--accent) 22%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);border-bottom-right-radius:4px}
+.msg.her{align-self:flex-start;background:var(--bg);border:1px solid var(--edge);border-bottom-left-radius:4px}
+.msg.tool{font-family:Consolas,monospace;font-size:13px;color:var(--muted);background:transparent;border:1px dashed var(--edge)}
+.msg.typing span{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin:0 2px;animation:dot 1s infinite}
+.msg.typing span:nth-child(2){animation-delay:.15s}.msg.typing span:nth-child(3){animation-delay:.3s}
+@keyframes dot{50%{transform:translateY(-5px);opacity:.4}}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}}
+.ask{display:flex;gap:8px;padding:12px;border-top:1px solid var(--edge)}
+.ask input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--edge);border-radius:12px;color:var(--ink);font:inherit;padding:10px 14px}
+.ask input:focus{outline:none;border-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chips button{background:var(--glass);border:1px solid var(--edge);color:var(--ink);border-radius:99px;padding:8px 14px;font:inherit;font-size:15px;cursor:pointer;transition:.2s}
+.chips button:hover{border-color:var(--accent);transform:translateY(-2px)}
+@media (max-width:860px){.chat{grid-template-columns:1fr}}
+/* app tour */
+.tour .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.tour .tabs button{background:none;border:1px solid var(--edge);color:var(--muted);border-radius:12px;padding:8px 16px;font:inherit;cursor:pointer}
+.tour .tabs button.on{background:var(--accent);border-color:var(--accent);color:#160c04;font-weight:600}
+.tour .screen{position:relative;aspect-ratio:16/9;border-radius:18px;overflow:hidden;border:1px solid var(--edge);box-shadow:0 50px 100px -50px var(--accent)}
+.tour .screen img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;opacity:0;transform:scale(1.03);transition:opacity .6s,transform 1.2s}
+.tour .screen img.on{opacity:1;transform:none}
+.tour p.cap{color:var(--muted);margin:14px 0 0;min-height:1.6em}
+/* privacy */
+.priv{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.priv .card{padding:26px}
+.priv .card b{font-size:44px;display:block;line-height:1;margin-bottom:8px}
+@media (max-width:760px){.priv{grid-template-columns:1fr}}
+/* numbers */
+.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;text-align:center}
+.nums b{display:block;font-size:clamp(36px,5vw,56px);line-height:1.1}
+.nums span{color:var(--muted);font-size:15px}
+@media (max-width:760px){.nums{grid-template-columns:1fr 1fr}}
+/* download */
+.dl{position:relative;border-radius:28px;padding:56px 40px;text-align:center;overflow:hidden;border:1px solid var(--edge);background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 20%,var(--surface)),var(--surface) 60%,color-mix(in srgb,var(--accent2) 18%,var(--surface)))}
+.dl h2{font-size:clamp(34px,5vw,58px)}
+.dl .btns{justify-content:center;margin-top:28px}
+.dl .note{color:var(--muted);font-size:14px;margin-top:22px}
+.dl img{position:absolute;bottom:-40px;height:260px;opacity:.9;pointer-events:none}
+.dl img.l{left:2%}.dl img.r{right:2%;transform:scaleX(-1)}
+@media (max-width:900px){.dl img{display:none}.dl{padding:44px 20px}}
+/* roadmap + community */
+.road{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;counter-reset:s}
+.road .card h3{color:var(--accent3)}
+.road .card ul{margin:8px 0 0;padding-left:18px;color:var(--muted)}
+@media (max-width:860px){.road{grid-template-columns:1fr}}
+.comm a.card{text-decoration:none;color:var(--ink);display:block}
+.comm .card .arrow{float:right;color:var(--accent);transition:transform .2s}
+.comm .card:hover .arrow{transform:translateX(5px)}
+</style>
+</head>
+<body>
+<nav class="top"></nav>
+
+<header class="hero">
+  <canvas id="embers" aria-hidden="true"></canvas>
+  <div class="kanji" aria-hidden="true">式神</div>
+  <div class="wrap">
+    <div>
+      <a class="badge" href="changelog.html"><b data-gh="version">0.9.2</b><span class="ru">голос и слух выбираются при первом запуске</span><span class="en">pick her voice on first launch</span> →</a>
+      <h1><span class="grad">Shikigami</span><small class="ru">ИИ-компаньон на рабочем столе</small><small class="en">an AI companion on your desktop</small></h1>
+      <p class="lead"><span class="ru">Живёт на панели задач и </span><span class="en">Lives on your taskbar and </span><span class="typed" id="typed"></span></p>
+      <div class="btns">
+        <a class="btn" href="https://github.com/Timkin1337/Shikigami/releases/latest"><svg viewBox="0 0 24 24"><path d="M3 5.5 10 4.5v7H3zM11 4.4 21 3v8.5H11zM3 12.5h7v7L3 18.5zM11 12.5h10V21l-10-1.4z"/></svg><span class="ru">Скачать для Windows</span><span class="en">Download for Windows</span></a>
+        <a class="btn ghost" href="https://timkin-died.itch.io/shikigami">itch.io</a>
+        <a class="btn ghost" href="https://t.me/shikigami_ai">Telegram</a>
+      </div>
+      <div class="meta"><span class="ru">бесплатно</span><span class="en">free</span><span class="ru">открытый код</span><span class="en">open source</span><span class="ru">без телеметрии</span><span class="en">no telemetry</span><span class="ru">свой ИИ или локальный</span><span class="en">your own or a local AI</span></div>
+    </div>
+    <div class="stage" id="stage">
+      <img class="still" src="img/character-wave.png" alt="Shikigami" width="424" height="1220">
+      <div class="loadbar"><i></i></div>
+      <div class="bubble" id="bubble"></div>
+      <div class="hint ru">потыкайте в неё</div><div class="hint en">poke her</div>
+      <div class="ctrl" id="ctrl">
+        <button id="b-live" class="ru">✨ Оживить 3D</button><button id="b-live-en" class="en">✨ Bring to life</button>
+        <button data-m="gl" class="on" hidden>3D</button>
+        <button data-m="ascii" hidden title="ASCII">░▒▓</button>
+        <button id="b-wave" hidden>👋</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="marquee" aria-hidden="true"><div id="mq"></div></div>
+
+<section id="features"><div class="wrap">
+  <span class="eyebrow ru">Что умеет</span><span class="eyebrow en">What she does</span>
+  <h2 class="rv"><span class="ru">Не окно с чатом, а <span class="grad">соседка по экрану</span></span><span class="en">Not a chat window — a <span class="grad">desk neighbour</span></span></h2>
+  <p class="sub rv ru">3D-персонаж (любая модель VRM) ходит по панели задач, садится на окна, прячется за ними и делает дела на ПК по просьбе — голосом или в чате.</p>
+  <p class="sub rv en">A 3D character (any VRM model) walks the taskbar, sits on windows, hides behind them, and gets things done on your PC — by voice or in chat.</p>
+  <div class="grid">
+    <div class="card rv" data-tilt><span class="ico">💬</span><h3 class="ru">Разговаривает</h3><h3 class="en">Talks</h3><p class="ru">Чат и голос: позовите по имени или зажмите клавишу. Имя и характер — ваши.</p><p class="en">Chat or voice: call her name or hold a key. Name and personality are yours.</p></div>
+    <div class="card rv" data-tilt><span class="ico">🛠</span><h3 class="ru">Помогает</h3><h3 class="en">Helps</h3><p class="ru">88 инструментов: программы, поиск, напоминания, заметки, музыка, файлы, экран.</p><p class="en">88 tools: apps, search, reminders, notes, music, files, the screen.</p></div>
+    <div class="card rv" data-tilt><span class="ico">🪟</span><h3 class="ru">Живёт на столе</h3><h3 class="en">Lives on your desktop</h3><p class="ru">Едет на окне, прячется, засыпает ночью, переодевается по погоде и сезону.</p><p class="en">Rides your windows, hides, dozes at night, dresses for weather and season.</p></div>
+    <div class="card rv" data-tilt><span class="ico">♟</span><h3 class="ru">Играет</h3><h3 class="en">Plays</h3><p class="ru">Шахматы, мини-игры, прятки за окнами, компаньон в Майнкрафте с модом «Глаза».</p><p class="en">Chess, mini-games, hide-and-seek, a Minecraft buddy with the “Eyes” mod.</p></div>
+  </div>
+  <p class="rv" style="margin-top:26px"><a href="features.html"><span class="ru">Все возможности →</span><span class="en">All features →</span></a></p>
+</div></section>
+
+<section id="chat"><div class="wrap chat">
+  <div>
+    <span class="eyebrow ru">Попробуйте</span><span class="eyebrow en">Try it</span>
+    <h2 class="rv ru">Поговорите с ней</h2><h2 class="rv en">Say hi</h2>
+    <p class="sub rv ru">Это демо на сайте с заготовленными ответами. В программе отвечает настоящий ИИ — тот, который выберете вы, а характер вы задаёте сами (здесь — «колючая, но заботливая»).</p>
+    <p class="sub rv en">A demo with canned replies. In the app a real AI of your choice answers, and you set the personality (here: “prickly but caring”).</p>
+    <div class="chips" id="chips"></div>
+  </div>
+  <div class="win rv">
+    <div class="bar"><i></i><i></i><i></i><span>Shikigami — <span class="ru">чат</span><span class="en">chat</span></span></div>
+    <div class="log" id="log" aria-live="polite"></div>
+    <form class="ask" id="ask"><input id="q" autocomplete="off" maxlength="200" aria-label="Message"><button class="btn" type="submit" style="padding:10px 16px">➤</button></form>
+  </div>
+</div></section>
+
+<section id="tour"><div class="wrap tour">
+  <span class="eyebrow ru">Экскурсия</span><span class="eyebrow en">Tour</span>
+  <h2 class="rv ru">Как это выглядит</h2><h2 class="rv en">What it looks like</h2>
+  <div class="tabs" id="tabs"></div>
+  <div class="screen rv" id="screen"></div>
+  <p class="cap" id="cap"></p>
+</div></section>
+
+<section id="privacy"><div class="wrap">
+  <span class="eyebrow ru">Приватность</span><span class="eyebrow en">Privacy</span>
+  <h2 class="rv"><span class="ru">Ваш ПК — <span class="grad">ваши правила</span></span><span class="en">Your PC, <span class="grad">your rules</span></span></h2>
+  <p class="sub rv ru">Никаких подписок и аккаунтов. Программа ничего не отправляет разработчику — проверить можно по коду.</p>
+  <p class="sub rv en">No subscriptions, no accounts. The app sends nothing to the developer — the code is there to check.</p>
+  <div class="priv">
+    <div class="card rv"><b class="grad">0</b><h3 class="ru">телеметрии</h3><h3 class="en">telemetry</h3><p class="ru">Ни аналитики, ни аккаунтов, ни автообновлений.</p><p class="en">No analytics, no accounts, no auto-updates.</p></div>
+    <div class="card rv"><b>🧠</b><h3 class="ru">Ваш «мозг»</h3><h3 class="en">Your “brain”</h3><p class="ru">Бесплатный ключ NVIDIA или локальная модель: Ollama, LM Studio, llama.cpp.</p><p class="en">A free NVIDIA key or a local model: Ollama, LM Studio, llama.cpp.</p></div>
+    <div class="card rv"><b>🛡</b><h3 class="ru">Опасное выключено</h3><h3 class="en">Risky stuff is off</h3><p class="ru">PowerShell, удаление и выключение — только если включите. Погасить экран она всегда спрашивает.</p><p class="en">PowerShell, deleting and shutdown only if you enable them. She always asks before turning off the screen.</p></div>
+    <div class="card rv"><b>🎙</b><h3 class="ru">Голос офлайн</h3><h3 class="en">Offline voice</h3><p class="ru">Голос и слух — модули по желанию, работают без интернета.</p><p class="en">Voice and hearing are optional modules that run offline.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="nums rv">
+    <div><b class="grad" data-gh="downloads">—</b><span class="ru">скачиваний с GitHub</span><span class="en">GitHub downloads</span></div>
+    <div><b class="grad" data-n="88">0</b><span class="ru">инструментов</span><span class="en">tools</span></div>
+    <div><b class="grad" data-n="5">0</b><span class="ru">выпусков за месяц</span><span class="en">releases in a month</span></div>
+    <div><b class="grad" data-gh="stars">—</b><span class="ru">звёзд на GitHub</span><span class="en">GitHub stars</span></div>
+  </div>
+</div></section>
+
+<section id="download"><div class="wrap">
+  <div class="dl rv">
+    <img class="l" src="img/character-tea.png" alt="" loading="lazy">
+    <img class="r" src="img/character-book.png" alt="" loading="lazy">
+    <h2 class="ru">Забрать к себе</h2><h2 class="en">Take her home</h2>
+    <p class="ru" style="color:var(--muted);max-width:560px;margin:0 auto">Установщик без прав администратора или переносная версия. Windows 10/11.</p>
+    <p class="en" style="color:var(--muted);max-width:560px;margin:0 auto">Installer without admin rights, or a portable zip. Windows 10/11.</p>
+    <div class="btns">
+      <a class="btn" href="https://github.com/Timkin1337/Shikigami/releases/latest"><span class="ru">GitHub Releases</span><span class="en">GitHub Releases</span></a>
+      <a class="btn ghost" href="https://timkin-died.itch.io/shikigami">itch.io</a>
+    </div>
+    <p class="note ru">Сборка не подписана, SmartScreen может предупредить: «Подробнее» → «Выполнить в любом случае». <a href="faq.html">Почему так →</a></p>
+    <p class="note en">The build isn't code-signed, so SmartScreen may warn you: “More info” → “Run anyway”. <a href="faq.html">Why →</a></p>
+  </div>
+</div></section>
+
+<section id="roadmap"><div class="wrap">
+  <span class="eyebrow ru">Планы</span><span class="eyebrow en">Roadmap</span>
+  <h2 class="rv ru">Что дальше</h2><h2 class="rv en">What's next</h2>
+  <div class="road">
+    <div class="card rv"><h3>0.9.3</h3><ul class="ru"><li>Отчёт об ошибке в один клик</li><li>Починка анимаций</li></ul><ul class="en"><li>One-click bug report</li><li>Animation fixes</li></ul></div>
+    <div class="card rv"><h3 class="ru">До 1.0</h3><h3 class="en">Before 1.0</h3><ul class="ru"><li>Кнопка «Где вы путаетесь?»</li><li>Встроенная локальная модель — без ключей</li></ul><ul class="en"><li>“Where are you getting lost?” button</li><li>Built-in local model — no keys</li></ul></div>
+    <div class="card rv"><h3 class="ru">После 1.0</h3><h3 class="en">After 1.0</h3><ul class="ru"><li>macOS</li><li>Своя комната, которая живёт сама</li></ul><ul class="en"><li>macOS</li><li>A room that lives on its own</li></ul></div>
+  </div>
+  <p class="rv" style="margin-top:26px"><a href="about.html"><span class="ru">Как всё устроено внутри →</span><span class="en">How it works inside →</span></a></p>
+</div></section>
+
+<section id="community"><div class="wrap">
+  <span class="eyebrow ru">Сообщество</span><span class="eyebrow en">Community</span>
+  <h2 class="rv ru">Пишите — я читаю всё</h2><h2 class="rv en">Write to me — I read everything</h2>
+  <p class="sub rv ru">Версия 0.9.2 целиком сделана по отзывам. <a href="reviews.html">Что вы написали и что я починил →</a></p>
+  <p class="sub rv en">Version 0.9.2 was built entirely from feedback. <a href="reviews.html">What you wrote and what I fixed →</a></p>
+  <div class="grid comm">
+    <a class="card rv" href="https://t.me/shikigami_ai" data-tilt><span class="arrow">→</span><span class="ico">✈️</span><h3>Telegram</h3><p class="ru">Новости, обсуждение, ранние превью</p><p class="en">News, chat, early previews</p></a>
+    <a class="card rv" href="https://timkin-died.itch.io/shikigami" data-tilt><span class="arrow">→</span><span class="ico">🎮</span><h3>itch.io</h3><p class="ru">Девлоги, комментарии, оценки</p><p class="en">Devlogs, comments, ratings</p></a>
+    <a class="card rv" href="https://github.com/Timkin1337/Shikigami" data-tilt><span class="arrow">→</span><span class="ico">⌨️</span><h3>GitHub</h3><p class="ru">Код, баги, звёздочка проекту</p><p class="en">Code, issues, a star for the project</p></a>
+    <a class="card rv" href="mailto:timkin.dev@gmail.com" data-tilt><span class="arrow">→</span><span class="ico">✉️</span><h3 class="ru">Почта</h3><h3 class="en">Email</h3><p>timkin.dev@gmail.com</p></a>
+  </div>
+</div></section>
+
+<footer></footer>
+
+<script src="assets/site.js"></script>
+<script>
+(function(){
+var ru=function(){return document.documentElement.lang=='ru'};
+
+// ---------- typed tagline ----------
+var PH={ru:['делает дела по голосу','садится на ваши окна','напоминает размяться','играет с вами в шахматы','прячется за окнами','ничего никуда не отправляет'],
+        en:['gets things done by voice','sits on your windows','reminds you to stretch','plays chess with you','hides behind your windows','never phones home']};
+var ti=0,ci=0,del=false,el=document.getElementById('typed');
+(function type(){var w=PH[ru()?'ru':'en'][ti%6];
+  if(!del){ci++;if(ci>w.length){del=true;return setTimeout(type,1800)}}else{ci--;if(ci<0){del=false;ci=0;ti++;}}
+  el.textContent=w.slice(0,Math.max(0,ci));setTimeout(type,del?28:55)})();
+
+// ---------- marquee ----------
+var MQ=[['голос','voice'],['88 инструментов','88 tools'],['шахматы','chess'],['Майнкрафт','Minecraft'],['любая VRM-модель','any VRM model'],['напоминания','reminders'],['прятки','hide-and-seek'],['Telegram-бот','Telegram bot'],['погода и сезоны','weather & seasons'],['локальные модели','local models'],['свои команды','custom commands'],['гардероб','wardrobe']];
+function mq(){var s=MQ.map(function(m){return '<span><b>✦</b> '+(ru()?m[0]:m[1])+'</span>'}).join('');document.getElementById('mq').innerHTML=s+s}
+mq();document.addEventListener('langchange',mq);
+
+// ---------- embers ----------
+var cv=document.getElementById('embers'),cx=cv.getContext('2d'),P=[],acc='#f0a03c';
+function col(){acc=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||acc}
+col();document.addEventListener('themechange',col);
+function rs(){cv.width=cv.offsetWidth;cv.height=cv.offsetHeight}rs();addEventListener('resize',rs);
+var still=matchMedia('(prefers-reduced-motion:reduce)').matches;
+for(var i=0;i<46;i++)P.push({x:Math.random(),y:Math.random(),r:Math.random()*2+.6,v:Math.random()*.25+.08,p:Math.random()*6});
+(function draw(){if(!still)requestAnimationFrame(draw);cx.clearRect(0,0,cv.width,cv.height);cx.fillStyle=acc;
+  P.forEach(function(p){p.y-=p.v/cv.height*3;p.p+=.02;if(p.y<-.02){p.y=1.02;p.x=Math.random()}
+    cx.globalAlpha=.25+.35*Math.sin(p.p);cx.beginPath();cx.arc(p.x*cv.width+Math.sin(p.p)*12,p.y*cv.height,p.r,0,7);cx.fill()})})();
+
+// ---------- hero character ----------
+var stage=document.getElementById('stage'),bub=document.getElementById('bubble'),hero=null,bt;
+var POKE={ru:['Эй! Я тут, вообще-то.','Щекотно!','Не тыкай в меня курсором…','Хм. Скачаешь меня — поговорим.','Ну что опять?','Я всё вижу 👀','Ладно, ладно, привет!','Ещё раз — и спрячусь за окно.'],
+          en:['Hey! I\'m right here.','That tickles!','Stop poking me with the cursor…','Hmph. Download me and we\'ll talk.','What now?','I see everything 👀','Fine, fine — hi!','One more time and I\'m hiding behind a window.']};
+var pk=0;
+function say(s){bub.textContent=s;bub.classList.add('show');clearTimeout(bt);bt=setTimeout(function(){bub.classList.remove('show')},2600)}
+stage.addEventListener('click',function(e){if(e.target.closest('.ctrl'))return;
+  var l=POKE[ru()?'ru':'en'];say(l[pk++%l.length]);track('poke');
+  if(hero)hero.poke(pk%4==0?'surprise':'joy')});
+function live(){
+  if(hero||stage.classList.contains('loading'))return;
+  stage.classList.add('loading');track('live-3d');
+  import('./assets/hero3d.js').then(function(){
+    hero=window.mountHero(stage,'assets/models/shikigami.vrm',{
+      onProgress:function(k){stage.querySelector('.loadbar i').style.width=(k*100)+'%'},
+      onReady:function(){stage.classList.remove('loading');stage.classList.add('live');stage.dataset.mode='gl';
+        document.querySelectorAll('#ctrl [data-m],#b-wave').forEach(function(b){b.hidden=false});
+        document.querySelectorAll('#b-live,#b-live-en').forEach(function(b){b.remove()});
+        hero.poke('wave');say(ru()?'Привет! Я Шикигами 👋':'Hi! I\'m Shikigami 👋')},
+      onError:function(){stage.classList.remove('loading')}});
+    if(!hero)stage.classList.remove('loading');
+  }).catch(function(){stage.classList.remove('loading')});
+}
+document.getElementById('b-live').onclick=live;document.getElementById('b-live-en').onclick=live;
+document.querySelectorAll('#ctrl [data-m]').forEach(function(b){b.onclick=function(){if(!hero)return;hero.setMode(b.dataset.m);
+  document.querySelectorAll('#ctrl [data-m]').forEach(function(x){x.classList.toggle('on',x==b)});track('mode-'+b.dataset.m)}});
+document.getElementById('b-wave').onclick=function(){hero&&hero.poke('wave');say(ru()?'Пока-пока! …шучу, я остаюсь.':'Bye-bye! …kidding, I\'m staying.')};
+document.addEventListener('konami',function(){if(hero){hero.setMode(hero.mode=='gl'?'ascii':'gl')}});
+// big screens with a normal connection load the model by themselves (17 MB); phones get a button
+var c=navigator.connection;
+if(matchMedia('(min-width:900px)').matches&&!(c&&(c.saveData||/2g/.test(c.effectiveType||''))))
+  addEventListener('load',function(){setTimeout(live,600)});
+
+// ---------- chat demo ----------
+var log=document.getElementById('log'),Q=[
+ {k:/привет|здрав|хай|hi|hello|hey/i,ru:['Привет','Хм. Привет. Наконец-то вспомнил, что я тут есть.'],en:['Hi','Hmph. Hi. Finally remembered I exist.']},
+ {k:/умее|можешь|what can|do you do/i,ru:['Что ты умеешь?','Открыть программы, найти что-то в интернете, поставить напоминание, включить музыку, посмотреть на экран, сыграть в шахматы… Ещё 80 пунктов перечислять или сам догадаешься?'],en:['What can you do?','Open apps, search the web, set reminders, play music, look at your screen, play chess… Want the other 80 items or can you guess?']},
+ {k:/погод|weather/i,ru:['Какая завтра погода?','⚙ Погода · город: Москва','Плюс три и дождь. Зонт возьми. …Не потому что я волнуюсь. Просто мокрый ты будешь ныть.'],en:['Weather tomorrow?','⚙ Weather · city: London','Nine degrees and rain. Take an umbrella. …Not because I worry. You just whine when you\'re wet.']},
+ {k:/напомн|remind/i,ru:['Напомни размяться через 30 минут','⚙ Напоминание · через 30 мин','Поставила. И не говори потом, что я не предупреждала, когда начну ворчать.'],en:['Remind me to stretch in 30 minutes','⚙ Reminder · in 30 min','Done. Don\'t say I didn\'t warn you when I start nagging.']},
+ {k:/данн|приват|privacy|data|следишь|spy/i,ru:['Ты отправляешь мои данные?','Никуда. Ни телеметрии, ни аккаунтов. Всё, что ты мне говоришь, остаётся на твоём ПК. Ну и у того ИИ, который ты сам выбрал.'],en:['Do you send my data anywhere?','Nowhere. No telemetry, no accounts. What you tell me stays on your PC — and with the AI you picked yourself.']},
+ {k:/шахм|игра|play|chess|game/i,ru:['Сыграем?','В шахматы? Ладно. Только потом не плачь. Могу и в прятки — спрячусь за твоим браузером.'],en:['Wanna play?','Chess? Fine. No crying afterwards. Or hide-and-seek — I\'ll hide behind your browser.']},
+ {k:/цен|стоит|бесплат|free|price|cost/i,ru:['Сколько стоишь?','Нисколько. Бесплатно и с открытым кодом. Нужен только «мозг»: бесплатный ключ NVIDIA или своя модель.'],en:['How much?','Nothing. Free and open source. You only need a “brain”: a free NVIDIA key or your own model.']},
+ {k:/кто ты|who are you|ты кто/i,ru:['Кто ты?','Шикигами. Дух-помощник, который живёт у тебя на рабочем столе. Имя и характер ты потом сам выберешь.'],en:['Who are you?','Shikigami. A helper spirit living on your desktop. You\'ll pick my name and personality yourself.']}
+];
+function add(cls,txt){var d=document.createElement('div');d.className='msg '+cls;d.textContent=txt;log.appendChild(d);log.scrollTop=log.scrollHeight;return d}
+var busy=false;
+function reply(item,mine){if(busy)return;busy=true;var L=ru()?item.ru:item.en;add('me',mine||L[0]);track('chat');
+  var rest=L.slice(1),i=0;
+  (function next(){if(i>=rest.length){busy=false;return}var s=rest[i++];
+    if(s[0]=='⚙'){setTimeout(function(){add('tool',s);next()},400);return}
+    var ty=document.createElement('div');ty.className='msg her typing';ty.innerHTML='<span></span><span></span><span></span>';log.appendChild(ty);log.scrollTop=log.scrollHeight;
+    setTimeout(function(){ty.remove();add('her',s);if(hero)hero.poke('joy');next()},700+Math.min(1600,s.length*14))})();
+}
+function chips(){var c=document.getElementById('chips');c.innerHTML='';Q.slice(1).forEach(function(it){var b=document.createElement('button');b.textContent=(ru()?it.ru:it.en)[0];b.onclick=function(){reply(it)};c.appendChild(b)});
+  document.getElementById('q').placeholder=ru()?'Напишите ей…':'Message her…';
+  log.innerHTML='';add('her',ru()?'Ну? Чего уставился? Спроси что-нибудь.':'Well? Why are you staring? Ask me something.')}
+chips();document.addEventListener('langchange',chips);
+document.getElementById('ask').onsubmit=function(e){e.preventDefault();var q=document.getElementById('q'),v=q.value.trim();if(!v||busy)return;q.value='';
+  var it=Q.filter(function(x){return x.k.test(v)})[0]||{ru:[v,'Это демо на сайте, я тут знаю только пару ответов. Скачай меня — там отвечу по-настоящему.'],en:[v,'This is just a site demo, I only know a few lines here. Download me and I\'ll answer for real.']};
+  reply(it,v)};
+
+// ---------- app tour ----------
+var TOUR=[['1-chat-and-companion','Чат','Chat','Чат и персонаж рядом: инструменты видны прямо в переписке.','Chat with her standing by: tool calls show right in the conversation.'],
+          ['2-home','Главная','Home','Главная: погода, дела, напоминания и уровень дружбы.','Home: weather, to-dos, reminders and friendship level.'],
+          ['3-wardrobe','Гардероб','Wardrobe','Гардероб: любая модель VRM, перекраска и фоторежим.','Wardrobe: any VRM model, recolouring and photo mode.'],
+          ['5-chess','Шахматы','Chess','Шахматы: она играет и комментирует ходы.','Chess: she plays and comments on your moves.']];
+var cur=0,tt;
+function tour(){var L=ru()?'ru':'en',sc=document.getElementById('screen'),tb=document.getElementById('tabs');
+  sc.innerHTML=TOUR.map(function(x,i){return '<img class="zoom'+(i==cur?' on':'')+'" src="img/'+L+'-'+x[0]+'.png" alt="'+(L=='ru'?x[3]:x[4])+'" loading="lazy">'}).join('');
+  tb.innerHTML=TOUR.map(function(x,i){return '<button'+(i==cur?' class="on"':'')+' data-i="'+i+'">'+(L=='ru'?x[1]:x[2])+'</button>'}).join('');
+  tb.querySelectorAll('button').forEach(function(b){b.onclick=function(){show(+b.dataset.i);clearInterval(tt)}});
+  document.getElementById('cap').textContent=TOUR[cur][L=='ru'?3:4]}
+function show(i){cur=i;var L=ru()?3:4;document.querySelectorAll('#screen img').forEach(function(im,k){im.classList.toggle('on',k==i)});
+  document.querySelectorAll('#tabs button').forEach(function(b,k){b.classList.toggle('on',k==i)});document.getElementById('cap').textContent=TOUR[i][L]}
+tour();document.addEventListener('langchange',tour);tt=setInterval(function(){show((cur+1)%TOUR.length)},5000);
+})();
+</script>
+</body>
+</html>
