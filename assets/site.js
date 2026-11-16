@@ -151,31 +151,18 @@
   }
   window.countUp = countUp;
 
-  // ---------- live GitHub numbers ----------
+  // ---------- project numbers: stats.json (GitHub + itch + Telegram), refreshed by stats.py every 3 hours ----------
   function ghStats() {
-    var els = document.querySelectorAll('[data-gh]');
+    var els = document.querySelectorAll('[data-stat]');
     if (!els.length) return;
-    var cached; try { cached = JSON.parse(sessionStorage.getItem('gh') || 'null'); } catch (e) { }
-    var p = cached ? Promise.resolve(cached) : Promise.all([
-      fetch('https://api.github.com/repos/' + REPO).then(function (r) { return r.json(); }),
-      fetch('https://api.github.com/repos/' + REPO + '/releases?per_page=100').then(function (r) { return r.json(); })
-    ]).then(function (a) {
-      var rel = Array.isArray(a[1]) ? a[1] : [];
-      var d = {
-        stars: a[0].stargazers_count || 0,
-        downloads: rel.reduce(function (s, r) { return s + (r.assets || []).reduce(function (x, as) { return x + as.download_count; }, 0); }, 0),
-        version: (rel[0] && rel[0].tag_name || '').replace(/^v/, '')
-      };
-      try { sessionStorage.setItem('gh', JSON.stringify(d)); } catch (e) { }
-      return d;
-    });
-    p.then(function (d) {
+    fetch('stats.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (d) {
+      window.STATS = d;
       els.forEach(function (el) {
-        var v = d[el.dataset.gh];
-        if (v === undefined || v === '') return;
+        var v = el.dataset.stat.split('.').reduce(function (o, k) { return o == null ? o : o[k]; }, d);
+        if (v === undefined || v === null || v === '') return;
         if (typeof v == 'number') countUp(el, v); else el.textContent = v;
-        el.closest('[data-gh-box]') && (el.closest('[data-gh-box]').hidden = false);
       });
+      document.dispatchEvent(new Event('stats'));
     }).catch(function () { });
   }
 
