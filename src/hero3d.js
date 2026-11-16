@@ -92,7 +92,7 @@ export function mountHero(box, url, { onProgress, onReady, onError } = {}) {
     joy = Math.max(0, joy - dt * 0.35); surprise = Math.max(0, surprise - dt * 0.8);
     expr('happy', Math.min(1, joy));
     expr('surprised', Math.min(1, surprise));
-    expr('blink', joy > 0.3 ? 0 : (blink > 0 ? Math.sin(blink / 0.16 * Math.PI) : 0));
+    expr('blink', joy > 0.05 || surprise > 0.05 ? 0 : (blink > 0 ? Math.sin(blink / 0.16 * Math.PI) : 0));
 
     vrm.update(dt);
     if (mode == 'gl') renderer.render(scene, camera); else ascii.render(scene, camera);
