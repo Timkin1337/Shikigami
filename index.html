@@ -11,7 +11,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0e0b09">
 <link rel="icon" href="img/favicon-256.png">
-<link rel="stylesheet" href="assets/site.css?v=202611162011">
+<link rel="stylesheet" href="assets/site.css?v=202611162025">
 <style>
 /* hero */
 .hero{position:relative;min-height:calc(100vh - 60px);display:flex;align-items:center;overflow:hidden;padding:30px 0}
@@ -238,7 +238,7 @@
     <div class="card rv"><h3 class="ru">До 1.0</h3><h3 class="en">Before 1.0</h3><ul class="ru"><li>Кнопка «Где вы путаетесь?»</li><li>Встроенная локальная модель — без ключей</li></ul><ul class="en"><li>“Where are you getting lost?” button</li><li>Built-in local model — no keys</li></ul></div>
     <div class="card rv"><h3 class="ru">После 1.0</h3><h3 class="en">After 1.0</h3><ul class="ru"><li>macOS</li><li>Своя комната, которая живёт сама</li></ul><ul class="en"><li>macOS</li><li>A room that lives on its own</li></ul></div>
   </div>
-  <p class="rv" style="margin-top:26px"><a href="about.html"><span class="ru">Как всё устроено внутри →</span><span class="en">How it works inside →</span></a></p>
+  <p class="rv" style="margin-top:26px"><a href="changelog.html#roadmap"><span class="ru">Вся дорожная карта →</span><span class="en">Full roadmap →</span></a> &nbsp;·&nbsp; <a href="about.html"><span class="ru">Как всё устроено внутри →</span><span class="en">How it works inside →</span></a></p>
 </div></section>
 
 <section id="community"><div class="wrap">
@@ -256,7 +256,7 @@
 
 <footer></footer>
 
-<script src="assets/site.js?v=202611162011"></script>
+<script src="assets/site.js?v=202611162025"></script>
 <script>
 (function(){
 var ru=function(){return document.documentElement.lang=='ru'};
@@ -297,7 +297,7 @@ stage.addEventListener('click',function(e){if(e.target.closest('.ctrl'))return;
 function live(){
   if(hero||stage.classList.contains('loading'))return;
   stage.classList.add('loading');track('live-3d');
-  import('./assets/hero3d.js?v=202611162011').then(function(){
+  import('./assets/hero3d.js?v=202611162025').then(function(){
     hero=window.mountHero(stage,'assets/models/shikigami.vrm',{
       onProgress:function(k){stage.querySelector('.loadbar i').style.width=(k*100)+'%'},
       onReady:function(){stage.classList.remove('loading');stage.classList.add('live');stage.dataset.mode='gl';
