@@ -11,7 +11,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0e0b09">
 <link rel="icon" href="img/favicon-256.png">
-<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/site.css?v=202611161932">
 <style>
 /* hero */
 .hero{position:relative;min-height:calc(100vh - 60px);display:flex;align-items:center;overflow:hidden;padding:30px 0}
@@ -256,7 +256,7 @@
 
 <footer></footer>
 
-<script src="assets/site.js"></script>
+<script src="assets/site.js?v=202611161932"></script>
 <script>
 (function(){
 var ru=function(){return document.documentElement.lang=='ru'};
@@ -297,7 +297,7 @@ stage.addEventListener('click',function(e){if(e.target.closest('.ctrl'))return;
 function live(){
   if(hero||stage.classList.contains('loading'))return;
   stage.classList.add('loading');track('live-3d');
-  import('./assets/hero3d.js').then(function(){
+  import('./assets/hero3d.js?v=202611161932').then(function(){
     hero=window.mountHero(stage,'assets/models/shikigami.vrm',{
       onProgress:function(k){stage.querySelector('.loadbar i').style.width=(k*100)+'%'},
       onReady:function(){stage.classList.remove('loading');stage.classList.add('live');stage.dataset.mode='gl';
