@@ -12,7 +12,7 @@
   "version": "0.9.2"
  },
  "itch": {
-  "views": 804,
+  "views": 805,
   "downloads": 215,
   "rating": null,
   "ratings": 0,
@@ -44,7 +44,14 @@
    "views": 804,
    "stars": 5,
    "tg": 12
+  },
+  {
+   "t": 1794911728,
+   "dl": 288,
+   "views": 805,
+   "stars": 5,
+   "tg": 12
   }
  ],
- "updated": "2026-11-17T09:13:49Z"
+ "updated": "2026-11-17T10:35:28Z"
 }
