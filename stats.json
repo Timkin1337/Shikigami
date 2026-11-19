@@ -1,8 +1,8 @@
 {
  "github": {
-  "downloads": 76,
+  "downloads": 78,
   "per_release": {
-   "0.9.2": 10,
+   "0.9.2": 12,
    "0.9.1": 32,
    "0.9.0": 34
   },
@@ -12,17 +12,17 @@
   "version": "0.9.2"
  },
  "itch": {
-  "views": 851,
-  "downloads": 225,
+  "views": 860,
+  "downloads": 227,
   "rating": null,
   "ratings": 0,
   "comments": 0,
   "devlogs": 6
  },
  "telegram": {
-  "subscribers": 12
+  "subscribers": 13
  },
- "total_downloads": 301,
+ "total_downloads": 305,
  "history": [
   {
    "t": 1794846571,
@@ -79,7 +79,14 @@
    "views": 851,
    "stars": 5,
    "tg": 12
+  },
+  {
+   "t": 1795097130,
+   "dl": 305,
+   "views": 860,
+   "stars": 5,
+   "tg": 13
   }
  ],
- "updated": "2026-11-18T22:35:28Z"
+ "updated": "2026-11-19T14:05:30Z"
 }
