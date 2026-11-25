@@ -16,7 +16,7 @@
   "downloads": 270,
   "rating": null,
   "ratings": 0,
-  "comments": 2,
+  "comments": 0,
   "devlogs": 7
  },
  "telegram": {
@@ -156,7 +156,14 @@
    "views": 967,
    "stars": 5,
    "tg": 12
+  },
+  {
+   "t": 1795635327,
+   "dl": 350,
+   "views": 967,
+   "stars": 5,
+   "tg": 12
   }
  ],
- "updated": "2026-11-25T15:33:02Z"
+ "updated": "2026-11-25T19:35:27Z"
 }
