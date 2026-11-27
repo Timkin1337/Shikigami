@@ -12,17 +12,17 @@
   "version": "0.9.2"
  },
  "itch": {
-  "views": 994,
-  "downloads": 279,
+  "views": 995,
+  "downloads": 281,
   "rating": null,
   "ratings": 0,
-  "comments": 0,
+  "comments": 2,
   "devlogs": 7
  },
  "telegram": {
   "subscribers": 13
  },
- "total_downloads": 364,
+ "total_downloads": 366,
  "history": [
   {
    "t": 1794846571,
@@ -184,7 +184,14 @@
    "views": 994,
    "stars": 5,
    "tg": 13
+  },
+  {
+   "t": 1795797327,
+   "dl": 366,
+   "views": 995,
+   "stars": 5,
+   "tg": 13
   }
  ],
- "updated": "2026-11-27T15:29:14Z"
+ "updated": "2026-11-27T16:35:27Z"
 }
