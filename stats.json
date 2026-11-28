@@ -12,11 +12,11 @@
   "version": "0.9.2"
  },
  "itch": {
-  "views": 1006,
+  "views": 1008,
   "downloads": 289,
   "rating": null,
   "ratings": 0,
-  "comments": 2,
+  "comments": 0,
   "devlogs": 7
  },
  "telegram": {
@@ -205,7 +205,14 @@
    "views": 1006,
    "stars": 5,
    "tg": 13
+  },
+  {
+   "t": 1795872928,
+   "dl": 374,
+   "views": 1008,
+   "stars": 5,
+   "tg": 13
   }
  ],
- "updated": "2026-11-28T11:36:12Z"
+ "updated": "2026-11-28T13:35:28Z"
 }
